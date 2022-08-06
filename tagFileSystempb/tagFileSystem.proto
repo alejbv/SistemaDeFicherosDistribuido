@@ -1,0 +1,93 @@
+syntax = "proto3";
+
+package tagFile;
+option go_package= "./tagFileSystempb";
+
+
+message tagFile{
+    string name = 1;
+    bytes  file =2;
+    repeated string tags = 3;    
+}
+// Implementar lo necesario para agregar archivos
+message AddFilesRequest {
+    tagFile file =1;
+
+}
+message AddFilesResponse {
+    string response =1;
+    
+}
+// Implementar lo necesario para eliminar archivos
+message DeleteFilesRequest {
+    repeated string tag =1;
+    
+}
+message DeleteFilesResponse {
+    string response =1;
+    
+}
+// Implementar lo necesario para listar a los archivos
+message ListFilesRequest {
+    repeated string tag =1;
+    
+}
+
+message ListFilesResponse {
+     string name =1;
+     repeated string tags =2;
+}
+
+
+// Implementar lo necesario para agregar etiquetas
+
+message AddTagsRequest {
+    repeated string taq_query =1;
+    repeated string tag_list =2;
+    
+}
+message AddTagsResponse {
+    string response =1;
+}
+
+// Implementar lo necesario para eliminar etiquetas
+message DeleteTagsRequest {
+    repeated string taq_query =1;
+    repeated string tag_list =2;
+    
+}
+message DeleteTagsResponse {
+    string response =1;
+}
+
+service tagFileSystemService{
+
+    /*
+    Copia uno o más ficheros hacia el sistema y estos son inscritos con
+    las etiquetas contenidas en tag-list
+    */
+    rpc AddFiles(stream AddFilesRequest) returns (AddFilesResponse){};
+
+    /*
+    Elimina todos los ficheros que cumplan con la consulta tag-query
+    */
+    rpc DeleteFiles(DeleteFilesRequest) returns (DeleteFilesResponse){};
+
+    /*
+    Lista el nombre y las etiquetas de todos los ficheros que cumplan con
+    la consulta tag-query
+    */
+    rpc ListFiles(ListFilesRequest) returns (stream ListFilesResponse){};
+
+    /*
+    Añade las etiquetas contenidas en tag-list a todos los ficheros que
+    cumplan con la consulta tag-query
+    */
+
+    rpc AddTags(stream AddTagsRequest) returns (AddTagsResponse){};
+    /*
+    Elimina las etiquetas contenidas en tag-list de todos los ficheros que
+    cumpan con la consulta tag-query.
+    */
+    rpc DeleteTags(DeleteTagsRequest) returns (DeleteTagsResponse){};
+}
