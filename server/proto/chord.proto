@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package chord;
+option go_package="./server/chord/chord";
+
+// Chord service for inter-node communication.
+service Chord {
+  // GetPredecessor returns the node believed to be the current predecessor.
+  rpc GetPredecessor(EmptyRequest) returns (Node);
+  // GetSuccessor returns the node believed to be the current successor.
+  rpc GetSuccessor(EmptyRequest) returns (Node);
+  // SetPredecessor sets the predecessor of this node.
+  rpc SetPredecessor(Node) returns (EmptyResponse);
+  // SetSuccessor sets the successor of this node.
+  rpc SetSuccessor(Node) returns (EmptyResponse);
+  // FindSuccessor finds the node that succeeds ID.
+  rpc FindSuccessor(ID) returns (Node);
+  // Notify this node that it possibly have a new predecessor.
+  rpc Notify(Node) returns (EmptyResponse);
+  // Check if this Node is alive.
+  rpc Check(EmptyRequest) returns (EmptyResponse);
+
+  // Get the value associated to a key.
+  rpc Get(GetRequest) returns (GetResponse);
+  // Set a <key, value> pair on storage.
+  rpc Set(SetRequest) returns (EmptyResponse);
+  // Delete a <key, value> pair from storage.
+  rpc Delete(DeleteRequest) returns (EmptyResponse);
+  // Partition return all <key, values> pairs in a given interval from storage.
+  rpc Partition(EmptyRequest) returns (PartitionResponse);
+  // Extend set a list of <key, values> pairs on the storage dictionary.
+  rpc Extend(ExtendRequest) returns (EmptyResponse);
+  // Discard deletes all <key, values> pairs in a given interval storage.
+  rpc Discard(DiscardRequest) returns (EmptyResponse);
+}
+
+
+// Empty request for null parameters.
+message EmptyRequest {}
+
+// Empty response for null returns.
+message EmptyResponse {}
+
+// Identifier of a node.
+message ID{
+  bytes ID = 1;
+}
+
+// Node contains an ID and an address.
+message Node {
+  bytes ID = 1;
+  string IP = 2;
+  string port = 3;
+}
+
+// GetRequest contains the key of a desired value.
+message GetRequest {
+  string Key = 1;
+  bool Lock = 2;
+  string IP = 3;
+}
+
+// GetResponse contains the value of a requested key.
+message GetResponse {
+  bytes Value = 1;
+}
+
+// SetRequest contains the <key, value> pair to set on storage.
+message SetRequest {
+  string Key = 1;
+  bytes Value = 2;
+  bool Replica = 3;
+  bool Lock = 4;
+  string IP = 5;
+}
+
+// DeleteRequest contains the key to eliminate.
+message DeleteRequest {
+  string Key = 1;
+  bool Replica = 2;
+  bool Lock = 3;
+  string IP = 4;
+}
+
+// PartitionResponse contains the contains the <key, value> pairs to return.
+message PartitionResponse {
+  map<string, bytes> in = 1;
+  map<string, bytes> out = 2;
+}
+
+// ExtendRequest contains the <key, value> pairs to set on the storage.
+message ExtendRequest {
+  map<string, bytes> dictionary = 1;
+}
+
+// DiscardRequest contains the lower and upper bound of the interval storage to delete.
+message DiscardRequest {
+  repeated string keys = 1;
+}
