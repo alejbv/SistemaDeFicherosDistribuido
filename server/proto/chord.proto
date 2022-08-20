@@ -3,66 +3,66 @@ syntax = "proto3";
 package chord;
 option go_package="./server/chord/chord";
 
-// Chord service for inter-node communication.
-service Chord {
-  // GetPredecessor returns the node believed to be the current predecessor.
-  rpc GetPredecessor(EmptyRequest) returns (Node);
-  // GetSuccessor returns the node believed to be the current successor.
-  rpc GetSuccessor(EmptyRequest) returns (Node);
-  // SetPredecessor sets the predecessor of this node.
-  rpc SetPredecessor(Node) returns (EmptyResponse);
-  // SetSuccessor sets the successor of this node.
-  rpc SetSuccessor(Node) returns (EmptyResponse);
-  // FindSuccessor finds the node that succeeds ID.
-  rpc FindSuccessor(ID) returns (Node);
-  // Notify this node that it possibly have a new predecessor.
-  rpc Notify(Node) returns (EmptyResponse);
-  // Check if this Node is alive.
-  rpc Check(EmptyRequest) returns (EmptyResponse);
 
-  // Get the value associated to a key.
-  rpc Get(GetRequest) returns (GetResponse);
-  // Set a <key, value> pair on storage.
-  rpc Set(SetRequest) returns (EmptyResponse);
-  // Delete a <key, value> pair from storage.
-  rpc Delete(DeleteRequest) returns (EmptyResponse);
-  // Partition return all <key, values> pairs in a given interval from storage.
-  rpc Partition(EmptyRequest) returns (PartitionResponse);
-  // Extend set a list of <key, values> pairs on the storage dictionary.
-  rpc Extend(ExtendRequest) returns (EmptyResponse);
-  // Discard deletes all <key, values> pairs in a given interval storage.
-  rpc Discard(DiscardRequest) returns (EmptyResponse);
-}
-
-
-// Empty request for null parameters.
-message EmptyRequest {}
-
-// Empty response for null returns.
-message EmptyResponse {}
-
-// Identifier of a node.
-message ID{
-  bytes ID = 1;
-}
-
-// Node contains an ID and an address.
+// Nodo que contiene una ID y una direccion IP.
 message Node {
   bytes ID = 1;
   string IP = 2;
   string port = 3;
 }
 
+// Las Request vacias
+message GetPredecessorRequest{}
+message GetSuccessorRequest{}
+message CheckRequest{}
+message PartitionRequest{}
+message ExtendResponse{}
+
+// Las respuestas vacias
+message SetPredecessorResponse{}
+message SetSuccessorResponse{}
+message NotifyResponse{}
+message CheckResponse{}
+message SetResponse{}
+message DeleteResponse{}
+message DiscardResponse{}
+
+
+// Las request que pasan un nodo
+message  SetPredecessorRequest{
+  Node predecessor =1 ;
+}
+
+message SetSuccessorRequest{
+ Node successor = 1;
+}
+
+message NotifyRequest{
+ Node notify = 1;
+}
+
+//Las respuestas que devuelven un nodo
+message GetPredecessorResponse{
+  Node predecessor =1;
+}
+
+message GetSuccessorResponse{
+  Node successor =1;
+}
+message FindSuccesorResponse{
+  Node succesor = 1;
+}
+
+
+// Otras Request
+message FindSuccesorRequest{
+  bytes ID =1;
+}
 // GetRequest contains the key of a desired value.
 message GetRequest {
   string Key = 1;
   bool Lock = 2;
   string IP = 3;
-}
-
-// GetResponse contains the value of a requested key.
-message GetResponse {
-  bytes Value = 1;
 }
 
 // SetRequest contains the <key, value> pair to set on storage.
@@ -82,12 +82,6 @@ message DeleteRequest {
   string IP = 4;
 }
 
-// PartitionResponse contains the contains the <key, value> pairs to return.
-message PartitionResponse {
-  map<string, bytes> in = 1;
-  map<string, bytes> out = 2;
-}
-
 // ExtendRequest contains the <key, value> pairs to set on the storage.
 message ExtendRequest {
   map<string, bytes> dictionary = 1;
@@ -96,4 +90,47 @@ message ExtendRequest {
 // DiscardRequest contains the lower and upper bound of the interval storage to delete.
 message DiscardRequest {
   repeated string keys = 1;
+}
+
+// Otras Respuestas
+// GetResponse contains the value of a requested key.
+message GetResponse {
+  bytes Value = 1;
+}
+// PartitionResponse contains the contains the <key, value> pairs to return.
+message PartitionResponse {
+  map<string, bytes> in = 1;
+  map<string, bytes> out = 2;
+}
+
+
+// Chord service for inter-node communication.
+service Chord {
+  // GetPredecessor devuelve el nodo que se cree que es el predecesor.
+  rpc GetPredecessor(GetPredecessorRequest) returns (GetPredecessorResponse);
+  // GetSuccessor devuelve el nodo que se cree que es el sucesor.
+  rpc GetSuccessor(GetSuccessorRequest) returns (GetSuccessorResponse);
+  // SetPredecessor encuentra el predecesor para el nodo actual.
+  rpc SetPredecessor(SetPredecessorRequest) returns (SetPredecessorResponse);
+  // SetSuccessor  encuentra el sucesor para el nodo actual.
+  rpc SetSuccessor(SetSuccessorRequest) returns (SetSuccessorResponse);
+  // FindSuccessor encuentra el nodo que sucede a esta ID.
+  rpc FindSuccessor(FindSuccesorRequest) returns (FindSuccesorResponse);
+  // Notify notifica al nodo que puede tener un nuevo sucesor.
+  rpc Notify(NotifyRequest) returns (NotifyResponse);
+  // Check comprueba si el nodo esta vivo.
+  rpc Check(CheckRequest) returns (CheckResponse);
+
+  // Get recupera el valor asociado a la clave.
+  rpc Get(GetRequest) returns (GetResponse);
+  // Set almacena un par <clave, valor>.
+  rpc Set(SetRequest) returns (SetResponse);
+  // Delete elimina el par <clave, valor> especifico.
+  rpc Delete(DeleteRequest) returns (DeleteResponse);
+  // Partition devuelve todos los pares <clave, valor> en el almacenamiento dado  un internal.
+  rpc Partition(PartitionRequest) returns (PartitionResponse);
+  // Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
+  rpc Extend(ExtendRequest) returns (ExtendResponse);
+  // Discard elimina todos los pares <clave, valor> en el almacenamiento.
+  rpc Discard(DiscardRequest) returns (DiscardResponse);
 }

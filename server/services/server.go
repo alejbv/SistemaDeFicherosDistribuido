@@ -1,4 +1,4 @@
-package server
+package services
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 
+	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord"
 	pb "github.com/alejbv/SistemaDeFicherosDistribuido/tagFileSystempb"
 	"google.golang.org/grpc"
 )
@@ -89,7 +90,7 @@ func NewServerListening(addr string) {
 		ch := make(chan os.Signal, 1)
 		signal.Notify(ch, os.Interrupt)
 
-		// Block until a signal is received
+		 Block until a signal is received
 		<-ch
 		fmt.Println("Stopping the Server...")
 		grpcserver.Stop()
@@ -98,23 +99,32 @@ func NewServerListening(addr string) {
 	*/
 }
 
-func main() {
+var (
+	node       *chord.Node
+	rsaPrivate string
+	rsaPublic  string
+)
+
+func StartServer(network string, rsaPrivateKeyPath string, rsaPublicteKeyPath string) {
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	fmt.Println("The Tag File System Service has started")
 
-	/*
-		Proceso para crear un cliente de MongoDb
-			client, err := mongo.NewClient()
-			if err != nil {
-				log.Fatal(err)
-			}
+	var err error
+	rsaPrivate = rsaPrivateKeyPath
+	rsaPublic = rsaPublicteKeyPath
 
-			err = client.Connect(context.TODO())
-			if err != nil {
-				log.Fatal(err)
-			}
-			collection = client.Database("mydb").Collection("tagfiles")
-	*/
-	NewServerListening("0.0.0.0:50051")
-	fmt.Println("Ending the service")
+	//NewServerListening("0.0.0.0:50051")
+	//fmt.Println("Ending the service")
+	// Completar esto
+	node, err = chord.DefaultNode("50050")
+	if err != nil {
+		log.Fatalf("No se pudo crear el nodo")
+	}
+
+	err = node.Start()
+
+	if err != nil {
+		log.Fatalf("No se pudo iniciar el nodo")
+	}
+
 }
