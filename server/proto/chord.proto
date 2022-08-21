@@ -3,7 +3,6 @@ syntax = "proto3";
 package chord;
 option go_package="./server/chord/chord";
 
-
 // Nodo que contiene una ID y una direccion IP.
 message Node {
   bytes ID = 1;

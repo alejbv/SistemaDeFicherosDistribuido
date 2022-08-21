@@ -22,32 +22,32 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type ChordClient interface {
-	// GetPredecessor returns the node believed to be the current predecessor.
-	GetPredecessor(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Node, error)
-	// GetSuccessor returns the node believed to be the current successor.
-	GetSuccessor(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Node, error)
-	// SetPredecessor sets the predecessor of this node.
-	SetPredecessor(ctx context.Context, in *Node, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// SetSuccessor sets the successor of this node.
-	SetSuccessor(ctx context.Context, in *Node, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// FindSuccessor finds the node that succeeds ID.
-	FindSuccessor(ctx context.Context, in *ID, opts ...grpc.CallOption) (*Node, error)
-	// Notify this node that it possibly have a new predecessor.
-	Notify(ctx context.Context, in *Node, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// Check if this Node is alive.
-	Check(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// Get the value associated to a key.
+	// GetPredecessor devuelve el nodo que se cree que es el predecesor.
+	GetPredecessor(ctx context.Context, in *GetPredecessorRequest, opts ...grpc.CallOption) (*GetPredecessorResponse, error)
+	// GetSuccessor devuelve el nodo que se cree que es el sucesor.
+	GetSuccessor(ctx context.Context, in *GetSuccessorRequest, opts ...grpc.CallOption) (*GetSuccessorResponse, error)
+	// SetPredecessor encuentra el predecesor para el nodo actual.
+	SetPredecessor(ctx context.Context, in *SetPredecessorRequest, opts ...grpc.CallOption) (*SetPredecessorResponse, error)
+	// SetSuccessor  encuentra el sucesor para el nodo actual.
+	SetSuccessor(ctx context.Context, in *SetSuccessorRequest, opts ...grpc.CallOption) (*SetSuccessorResponse, error)
+	// FindSuccessor encuentra el nodo que sucede a esta ID.
+	FindSuccessor(ctx context.Context, in *FindSuccesorRequest, opts ...grpc.CallOption) (*FindSuccesorResponse, error)
+	// Notify notifica al nodo que puede tener un nuevo sucesor.
+	Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error)
+	// Check comprueba si el nodo esta vivo.
+	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error)
+	// Get recupera el valor asociado a la clave.
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	// Set a <key, value> pair on storage.
-	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// Delete a <key, value> pair from storage.
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// Partition return all <key, values> pairs in a given interval from storage.
-	Partition(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*PartitionResponse, error)
-	// Extend set a list of <key, values> pairs on the storage dictionary.
-	Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
-	// Discard deletes all <key, values> pairs in a given interval storage.
-	Discard(ctx context.Context, in *DiscardRequest, opts ...grpc.CallOption) (*EmptyResponse, error)
+	// Set almacena un par <clave, valor>.
+	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error)
+	// Delete elimina el par <clave, valor> especifico.
+	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
+	// Partition devuelve todos los pares <clave, valor> en el almacenamiento dado  un internal.
+	Partition(ctx context.Context, in *PartitionRequest, opts ...grpc.CallOption) (*PartitionResponse, error)
+	// Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
+	Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*ExtendResponse, error)
+	// Discard elimina todos los pares <clave, valor> en el almacenamiento.
+	Discard(ctx context.Context, in *DiscardRequest, opts ...grpc.CallOption) (*DiscardResponse, error)
 }
 
 type chordClient struct {
@@ -58,8 +58,8 @@ func NewChordClient(cc grpc.ClientConnInterface) ChordClient {
 	return &chordClient{cc}
 }
 
-func (c *chordClient) GetPredecessor(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Node, error) {
-	out := new(Node)
+func (c *chordClient) GetPredecessor(ctx context.Context, in *GetPredecessorRequest, opts ...grpc.CallOption) (*GetPredecessorResponse, error) {
+	out := new(GetPredecessorResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/GetPredecessor", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -67,8 +67,8 @@ func (c *chordClient) GetPredecessor(ctx context.Context, in *EmptyRequest, opts
 	return out, nil
 }
 
-func (c *chordClient) GetSuccessor(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*Node, error) {
-	out := new(Node)
+func (c *chordClient) GetSuccessor(ctx context.Context, in *GetSuccessorRequest, opts ...grpc.CallOption) (*GetSuccessorResponse, error) {
+	out := new(GetSuccessorResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/GetSuccessor", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -76,8 +76,8 @@ func (c *chordClient) GetSuccessor(ctx context.Context, in *EmptyRequest, opts .
 	return out, nil
 }
 
-func (c *chordClient) SetPredecessor(ctx context.Context, in *Node, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) SetPredecessor(ctx context.Context, in *SetPredecessorRequest, opts ...grpc.CallOption) (*SetPredecessorResponse, error) {
+	out := new(SetPredecessorResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/SetPredecessor", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -85,8 +85,8 @@ func (c *chordClient) SetPredecessor(ctx context.Context, in *Node, opts ...grpc
 	return out, nil
 }
 
-func (c *chordClient) SetSuccessor(ctx context.Context, in *Node, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) SetSuccessor(ctx context.Context, in *SetSuccessorRequest, opts ...grpc.CallOption) (*SetSuccessorResponse, error) {
+	out := new(SetSuccessorResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/SetSuccessor", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -94,8 +94,8 @@ func (c *chordClient) SetSuccessor(ctx context.Context, in *Node, opts ...grpc.C
 	return out, nil
 }
 
-func (c *chordClient) FindSuccessor(ctx context.Context, in *ID, opts ...grpc.CallOption) (*Node, error) {
-	out := new(Node)
+func (c *chordClient) FindSuccessor(ctx context.Context, in *FindSuccesorRequest, opts ...grpc.CallOption) (*FindSuccesorResponse, error) {
+	out := new(FindSuccesorResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/FindSuccessor", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -103,8 +103,8 @@ func (c *chordClient) FindSuccessor(ctx context.Context, in *ID, opts ...grpc.Ca
 	return out, nil
 }
 
-func (c *chordClient) Notify(ctx context.Context, in *Node, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error) {
+	out := new(NotifyResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Notify", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -112,8 +112,8 @@ func (c *chordClient) Notify(ctx context.Context, in *Node, opts ...grpc.CallOpt
 	return out, nil
 }
 
-func (c *chordClient) Check(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error) {
+	out := new(CheckResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Check", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -130,8 +130,8 @@ func (c *chordClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *chordClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error) {
+	out := new(SetResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Set", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -139,8 +139,8 @@ func (c *chordClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.Call
 	return out, nil
 }
 
-func (c *chordClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
+	out := new(DeleteResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Delete", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -148,7 +148,7 @@ func (c *chordClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grp
 	return out, nil
 }
 
-func (c *chordClient) Partition(ctx context.Context, in *EmptyRequest, opts ...grpc.CallOption) (*PartitionResponse, error) {
+func (c *chordClient) Partition(ctx context.Context, in *PartitionRequest, opts ...grpc.CallOption) (*PartitionResponse, error) {
 	out := new(PartitionResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Partition", in, out, opts...)
 	if err != nil {
@@ -157,8 +157,8 @@ func (c *chordClient) Partition(ctx context.Context, in *EmptyRequest, opts ...g
 	return out, nil
 }
 
-func (c *chordClient) Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*ExtendResponse, error) {
+	out := new(ExtendResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Extend", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -166,8 +166,8 @@ func (c *chordClient) Extend(ctx context.Context, in *ExtendRequest, opts ...grp
 	return out, nil
 }
 
-func (c *chordClient) Discard(ctx context.Context, in *DiscardRequest, opts ...grpc.CallOption) (*EmptyResponse, error) {
-	out := new(EmptyResponse)
+func (c *chordClient) Discard(ctx context.Context, in *DiscardRequest, opts ...grpc.CallOption) (*DiscardResponse, error) {
+	out := new(DiscardResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Discard", in, out, opts...)
 	if err != nil {
 		return nil, err
@@ -179,32 +179,32 @@ func (c *chordClient) Discard(ctx context.Context, in *DiscardRequest, opts ...g
 // All implementations must embed UnimplementedChordServer
 // for forward compatibility
 type ChordServer interface {
-	// GetPredecessor returns the node believed to be the current predecessor.
-	GetPredecessor(context.Context, *EmptyRequest) (*Node, error)
-	// GetSuccessor returns the node believed to be the current successor.
-	GetSuccessor(context.Context, *EmptyRequest) (*Node, error)
-	// SetPredecessor sets the predecessor of this node.
-	SetPredecessor(context.Context, *Node) (*EmptyResponse, error)
-	// SetSuccessor sets the successor of this node.
-	SetSuccessor(context.Context, *Node) (*EmptyResponse, error)
-	// FindSuccessor finds the node that succeeds ID.
-	FindSuccessor(context.Context, *ID) (*Node, error)
-	// Notify this node that it possibly have a new predecessor.
-	Notify(context.Context, *Node) (*EmptyResponse, error)
-	// Check if this Node is alive.
-	Check(context.Context, *EmptyRequest) (*EmptyResponse, error)
-	// Get the value associated to a key.
+	// GetPredecessor devuelve el nodo que se cree que es el predecesor.
+	GetPredecessor(context.Context, *GetPredecessorRequest) (*GetPredecessorResponse, error)
+	// GetSuccessor devuelve el nodo que se cree que es el sucesor.
+	GetSuccessor(context.Context, *GetSuccessorRequest) (*GetSuccessorResponse, error)
+	// SetPredecessor encuentra el predecesor para el nodo actual.
+	SetPredecessor(context.Context, *SetPredecessorRequest) (*SetPredecessorResponse, error)
+	// SetSuccessor  encuentra el sucesor para el nodo actual.
+	SetSuccessor(context.Context, *SetSuccessorRequest) (*SetSuccessorResponse, error)
+	// FindSuccessor encuentra el nodo que sucede a esta ID.
+	FindSuccessor(context.Context, *FindSuccesorRequest) (*FindSuccesorResponse, error)
+	// Notify notifica al nodo que puede tener un nuevo sucesor.
+	Notify(context.Context, *NotifyRequest) (*NotifyResponse, error)
+	// Check comprueba si el nodo esta vivo.
+	Check(context.Context, *CheckRequest) (*CheckResponse, error)
+	// Get recupera el valor asociado a la clave.
 	Get(context.Context, *GetRequest) (*GetResponse, error)
-	// Set a <key, value> pair on storage.
-	Set(context.Context, *SetRequest) (*EmptyResponse, error)
-	// Delete a <key, value> pair from storage.
-	Delete(context.Context, *DeleteRequest) (*EmptyResponse, error)
-	// Partition return all <key, values> pairs in a given interval from storage.
-	Partition(context.Context, *EmptyRequest) (*PartitionResponse, error)
-	// Extend set a list of <key, values> pairs on the storage dictionary.
-	Extend(context.Context, *ExtendRequest) (*EmptyResponse, error)
-	// Discard deletes all <key, values> pairs in a given interval storage.
-	Discard(context.Context, *DiscardRequest) (*EmptyResponse, error)
+	// Set almacena un par <clave, valor>.
+	Set(context.Context, *SetRequest) (*SetResponse, error)
+	// Delete elimina el par <clave, valor> especifico.
+	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
+	// Partition devuelve todos los pares <clave, valor> en el almacenamiento dado  un internal.
+	Partition(context.Context, *PartitionRequest) (*PartitionResponse, error)
+	// Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
+	Extend(context.Context, *ExtendRequest) (*ExtendResponse, error)
+	// Discard elimina todos los pares <clave, valor> en el almacenamiento.
+	Discard(context.Context, *DiscardRequest) (*DiscardResponse, error)
 	mustEmbedUnimplementedChordServer()
 }
 
@@ -212,43 +212,43 @@ type ChordServer interface {
 type UnimplementedChordServer struct {
 }
 
-func (UnimplementedChordServer) GetPredecessor(context.Context, *EmptyRequest) (*Node, error) {
+func (UnimplementedChordServer) GetPredecessor(context.Context, *GetPredecessorRequest) (*GetPredecessorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPredecessor not implemented")
 }
-func (UnimplementedChordServer) GetSuccessor(context.Context, *EmptyRequest) (*Node, error) {
+func (UnimplementedChordServer) GetSuccessor(context.Context, *GetSuccessorRequest) (*GetSuccessorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSuccessor not implemented")
 }
-func (UnimplementedChordServer) SetPredecessor(context.Context, *Node) (*EmptyResponse, error) {
+func (UnimplementedChordServer) SetPredecessor(context.Context, *SetPredecessorRequest) (*SetPredecessorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetPredecessor not implemented")
 }
-func (UnimplementedChordServer) SetSuccessor(context.Context, *Node) (*EmptyResponse, error) {
+func (UnimplementedChordServer) SetSuccessor(context.Context, *SetSuccessorRequest) (*SetSuccessorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method SetSuccessor not implemented")
 }
-func (UnimplementedChordServer) FindSuccessor(context.Context, *ID) (*Node, error) {
+func (UnimplementedChordServer) FindSuccessor(context.Context, *FindSuccesorRequest) (*FindSuccesorResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method FindSuccessor not implemented")
 }
-func (UnimplementedChordServer) Notify(context.Context, *Node) (*EmptyResponse, error) {
+func (UnimplementedChordServer) Notify(context.Context, *NotifyRequest) (*NotifyResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Notify not implemented")
 }
-func (UnimplementedChordServer) Check(context.Context, *EmptyRequest) (*EmptyResponse, error) {
+func (UnimplementedChordServer) Check(context.Context, *CheckRequest) (*CheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
 }
 func (UnimplementedChordServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
 }
-func (UnimplementedChordServer) Set(context.Context, *SetRequest) (*EmptyResponse, error) {
+func (UnimplementedChordServer) Set(context.Context, *SetRequest) (*SetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
 }
-func (UnimplementedChordServer) Delete(context.Context, *DeleteRequest) (*EmptyResponse, error) {
+func (UnimplementedChordServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
 }
-func (UnimplementedChordServer) Partition(context.Context, *EmptyRequest) (*PartitionResponse, error) {
+func (UnimplementedChordServer) Partition(context.Context, *PartitionRequest) (*PartitionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Partition not implemented")
 }
-func (UnimplementedChordServer) Extend(context.Context, *ExtendRequest) (*EmptyResponse, error) {
+func (UnimplementedChordServer) Extend(context.Context, *ExtendRequest) (*ExtendResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Extend not implemented")
 }
-func (UnimplementedChordServer) Discard(context.Context, *DiscardRequest) (*EmptyResponse, error) {
+func (UnimplementedChordServer) Discard(context.Context, *DiscardRequest) (*DiscardResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Discard not implemented")
 }
 func (UnimplementedChordServer) mustEmbedUnimplementedChordServer() {}
@@ -265,7 +265,7 @@ func RegisterChordServer(s grpc.ServiceRegistrar, srv ChordServer) {
 }
 
 func _Chord_GetPredecessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EmptyRequest)
+	in := new(GetPredecessorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -277,13 +277,13 @@ func _Chord_GetPredecessor_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/chord.Chord/GetPredecessor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).GetPredecessor(ctx, req.(*EmptyRequest))
+		return srv.(ChordServer).GetPredecessor(ctx, req.(*GetPredecessorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Chord_GetSuccessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EmptyRequest)
+	in := new(GetSuccessorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -295,13 +295,13 @@ func _Chord_GetSuccessor_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/chord.Chord/GetSuccessor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).GetSuccessor(ctx, req.(*EmptyRequest))
+		return srv.(ChordServer).GetSuccessor(ctx, req.(*GetSuccessorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Chord_SetPredecessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Node)
+	in := new(SetPredecessorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -313,13 +313,13 @@ func _Chord_SetPredecessor_Handler(srv interface{}, ctx context.Context, dec fun
 		FullMethod: "/chord.Chord/SetPredecessor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).SetPredecessor(ctx, req.(*Node))
+		return srv.(ChordServer).SetPredecessor(ctx, req.(*SetPredecessorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Chord_SetSuccessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Node)
+	in := new(SetSuccessorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -331,13 +331,13 @@ func _Chord_SetSuccessor_Handler(srv interface{}, ctx context.Context, dec func(
 		FullMethod: "/chord.Chord/SetSuccessor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).SetSuccessor(ctx, req.(*Node))
+		return srv.(ChordServer).SetSuccessor(ctx, req.(*SetSuccessorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Chord_FindSuccessor_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ID)
+	in := new(FindSuccesorRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -349,13 +349,13 @@ func _Chord_FindSuccessor_Handler(srv interface{}, ctx context.Context, dec func
 		FullMethod: "/chord.Chord/FindSuccessor",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).FindSuccessor(ctx, req.(*ID))
+		return srv.(ChordServer).FindSuccessor(ctx, req.(*FindSuccesorRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Chord_Notify_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(Node)
+	in := new(NotifyRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -367,13 +367,13 @@ func _Chord_Notify_Handler(srv interface{}, ctx context.Context, dec func(interf
 		FullMethod: "/chord.Chord/Notify",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).Notify(ctx, req.(*Node))
+		return srv.(ChordServer).Notify(ctx, req.(*NotifyRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
 func _Chord_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EmptyRequest)
+	in := new(CheckRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -385,7 +385,7 @@ func _Chord_Check_Handler(srv interface{}, ctx context.Context, dec func(interfa
 		FullMethod: "/chord.Chord/Check",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).Check(ctx, req.(*EmptyRequest))
+		return srv.(ChordServer).Check(ctx, req.(*CheckRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -445,7 +445,7 @@ func _Chord_Delete_Handler(srv interface{}, ctx context.Context, dec func(interf
 }
 
 func _Chord_Partition_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(EmptyRequest)
+	in := new(PartitionRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
@@ -457,7 +457,7 @@ func _Chord_Partition_Handler(srv interface{}, ctx context.Context, dec func(int
 		FullMethod: "/chord.Chord/Partition",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).Partition(ctx, req.(*EmptyRequest))
+		return srv.(ChordServer).Partition(ctx, req.(*PartitionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }

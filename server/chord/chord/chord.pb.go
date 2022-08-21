@@ -20,133 +20,7 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// Empty request for null parameters.
-type EmptyRequest struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *EmptyRequest) Reset() {
-	*x = EmptyRequest{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[0]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *EmptyRequest) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EmptyRequest) ProtoMessage() {}
-
-func (x *EmptyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[0]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EmptyRequest.ProtoReflect.Descriptor instead.
-func (*EmptyRequest) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{0}
-}
-
-// Empty response for null returns.
-type EmptyResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-}
-
-func (x *EmptyResponse) Reset() {
-	*x = EmptyResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[1]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *EmptyResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*EmptyResponse) ProtoMessage() {}
-
-func (x *EmptyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[1]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use EmptyResponse.ProtoReflect.Descriptor instead.
-func (*EmptyResponse) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{1}
-}
-
-// Identifier of a node.
-type ID struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	ID []byte `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
-}
-
-func (x *ID) Reset() {
-	*x = ID{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[2]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *ID) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*ID) ProtoMessage() {}
-
-func (x *ID) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[2]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use ID.ProtoReflect.Descriptor instead.
-func (*ID) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{2}
-}
-
-func (x *ID) GetID() []byte {
-	if x != nil {
-		return x.ID
-	}
-	return nil
-}
-
-// Node contains an ID and an address.
+// Nodo que contiene una ID y una direccion IP.
 type Node struct {
 	state         protoimpl.MessageState
 	sizeCache     protoimpl.SizeCache
@@ -160,7 +34,7 @@ type Node struct {
 func (x *Node) Reset() {
 	*x = Node{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[3]
+		mi := &file_server_proto_chord_proto_msgTypes[0]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -173,7 +47,7 @@ func (x *Node) String() string {
 func (*Node) ProtoMessage() {}
 
 func (x *Node) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[3]
+	mi := &file_server_proto_chord_proto_msgTypes[0]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -186,7 +60,7 @@ func (x *Node) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Node.ProtoReflect.Descriptor instead.
 func (*Node) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{3}
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Node) GetID() []byte {
@@ -210,6 +84,796 @@ func (x *Node) GetPort() string {
 	return ""
 }
 
+// Las Request vacias
+type GetPredecessorRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetPredecessorRequest) Reset() {
+	*x = GetPredecessorRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[1]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetPredecessorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPredecessorRequest) ProtoMessage() {}
+
+func (x *GetPredecessorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[1]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPredecessorRequest.ProtoReflect.Descriptor instead.
+func (*GetPredecessorRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{1}
+}
+
+type GetSuccessorRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *GetSuccessorRequest) Reset() {
+	*x = GetSuccessorRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[2]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetSuccessorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSuccessorRequest) ProtoMessage() {}
+
+func (x *GetSuccessorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[2]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSuccessorRequest.ProtoReflect.Descriptor instead.
+func (*GetSuccessorRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{2}
+}
+
+type CheckRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *CheckRequest) Reset() {
+	*x = CheckRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[3]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CheckRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckRequest) ProtoMessage() {}
+
+func (x *CheckRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[3]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckRequest.ProtoReflect.Descriptor instead.
+func (*CheckRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{3}
+}
+
+type PartitionRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *PartitionRequest) Reset() {
+	*x = PartitionRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PartitionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PartitionRequest) ProtoMessage() {}
+
+func (x *PartitionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PartitionRequest.ProtoReflect.Descriptor instead.
+func (*PartitionRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{4}
+}
+
+type ExtendResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *ExtendResponse) Reset() {
+	*x = ExtendResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ExtendResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ExtendResponse) ProtoMessage() {}
+
+func (x *ExtendResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ExtendResponse.ProtoReflect.Descriptor instead.
+func (*ExtendResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{5}
+}
+
+// Las respuestas vacias
+type SetPredecessorResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SetPredecessorResponse) Reset() {
+	*x = SetPredecessorResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SetPredecessorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetPredecessorResponse) ProtoMessage() {}
+
+func (x *SetPredecessorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetPredecessorResponse.ProtoReflect.Descriptor instead.
+func (*SetPredecessorResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{6}
+}
+
+type SetSuccessorResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SetSuccessorResponse) Reset() {
+	*x = SetSuccessorResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SetSuccessorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetSuccessorResponse) ProtoMessage() {}
+
+func (x *SetSuccessorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetSuccessorResponse.ProtoReflect.Descriptor instead.
+func (*SetSuccessorResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{7}
+}
+
+type NotifyResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *NotifyResponse) Reset() {
+	*x = NotifyResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[8]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *NotifyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotifyResponse) ProtoMessage() {}
+
+func (x *NotifyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[8]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotifyResponse.ProtoReflect.Descriptor instead.
+func (*NotifyResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{8}
+}
+
+type CheckResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *CheckResponse) Reset() {
+	*x = CheckResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[9]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *CheckResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CheckResponse) ProtoMessage() {}
+
+func (x *CheckResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[9]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CheckResponse.ProtoReflect.Descriptor instead.
+func (*CheckResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{9}
+}
+
+type SetResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *SetResponse) Reset() {
+	*x = SetResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[10]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetResponse) ProtoMessage() {}
+
+func (x *SetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[10]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetResponse.ProtoReflect.Descriptor instead.
+func (*SetResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{10}
+}
+
+type DeleteResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *DeleteResponse) Reset() {
+	*x = DeleteResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[11]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DeleteResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteResponse) ProtoMessage() {}
+
+func (x *DeleteResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[11]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteResponse.ProtoReflect.Descriptor instead.
+func (*DeleteResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{11}
+}
+
+type DiscardResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+}
+
+func (x *DiscardResponse) Reset() {
+	*x = DiscardResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[12]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *DiscardResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DiscardResponse) ProtoMessage() {}
+
+func (x *DiscardResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[12]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DiscardResponse.ProtoReflect.Descriptor instead.
+func (*DiscardResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{12}
+}
+
+// Las request que pasan un nodo
+type SetPredecessorRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Predecessor *Node `protobuf:"bytes,1,opt,name=predecessor,proto3" json:"predecessor,omitempty"`
+}
+
+func (x *SetPredecessorRequest) Reset() {
+	*x = SetPredecessorRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[13]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SetPredecessorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetPredecessorRequest) ProtoMessage() {}
+
+func (x *SetPredecessorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[13]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetPredecessorRequest.ProtoReflect.Descriptor instead.
+func (*SetPredecessorRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *SetPredecessorRequest) GetPredecessor() *Node {
+	if x != nil {
+		return x.Predecessor
+	}
+	return nil
+}
+
+type SetSuccessorRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Successor *Node `protobuf:"bytes,1,opt,name=successor,proto3" json:"successor,omitempty"`
+}
+
+func (x *SetSuccessorRequest) Reset() {
+	*x = SetSuccessorRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[14]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SetSuccessorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetSuccessorRequest) ProtoMessage() {}
+
+func (x *SetSuccessorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[14]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetSuccessorRequest.ProtoReflect.Descriptor instead.
+func (*SetSuccessorRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *SetSuccessorRequest) GetSuccessor() *Node {
+	if x != nil {
+		return x.Successor
+	}
+	return nil
+}
+
+type NotifyRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Notify *Node `protobuf:"bytes,1,opt,name=notify,proto3" json:"notify,omitempty"`
+}
+
+func (x *NotifyRequest) Reset() {
+	*x = NotifyRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[15]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *NotifyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*NotifyRequest) ProtoMessage() {}
+
+func (x *NotifyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[15]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use NotifyRequest.ProtoReflect.Descriptor instead.
+func (*NotifyRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *NotifyRequest) GetNotify() *Node {
+	if x != nil {
+		return x.Notify
+	}
+	return nil
+}
+
+//Las respuestas que devuelven un nodo
+type GetPredecessorResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Predecessor *Node `protobuf:"bytes,1,opt,name=predecessor,proto3" json:"predecessor,omitempty"`
+}
+
+func (x *GetPredecessorResponse) Reset() {
+	*x = GetPredecessorResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[16]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetPredecessorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetPredecessorResponse) ProtoMessage() {}
+
+func (x *GetPredecessorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[16]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetPredecessorResponse.ProtoReflect.Descriptor instead.
+func (*GetPredecessorResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *GetPredecessorResponse) GetPredecessor() *Node {
+	if x != nil {
+		return x.Predecessor
+	}
+	return nil
+}
+
+type GetSuccessorResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Successor *Node `protobuf:"bytes,1,opt,name=successor,proto3" json:"successor,omitempty"`
+}
+
+func (x *GetSuccessorResponse) Reset() {
+	*x = GetSuccessorResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[17]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetSuccessorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetSuccessorResponse) ProtoMessage() {}
+
+func (x *GetSuccessorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[17]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetSuccessorResponse.ProtoReflect.Descriptor instead.
+func (*GetSuccessorResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *GetSuccessorResponse) GetSuccessor() *Node {
+	if x != nil {
+		return x.Successor
+	}
+	return nil
+}
+
+type FindSuccesorResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Succesor *Node `protobuf:"bytes,1,opt,name=succesor,proto3" json:"succesor,omitempty"`
+}
+
+func (x *FindSuccesorResponse) Reset() {
+	*x = FindSuccesorResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[18]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FindSuccesorResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindSuccesorResponse) ProtoMessage() {}
+
+func (x *FindSuccesorResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[18]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindSuccesorResponse.ProtoReflect.Descriptor instead.
+func (*FindSuccesorResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *FindSuccesorResponse) GetSuccesor() *Node {
+	if x != nil {
+		return x.Succesor
+	}
+	return nil
+}
+
+// Otras Request
+type FindSuccesorRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	ID []byte `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+}
+
+func (x *FindSuccesorRequest) Reset() {
+	*x = FindSuccesorRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[19]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *FindSuccesorRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FindSuccesorRequest) ProtoMessage() {}
+
+func (x *FindSuccesorRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[19]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FindSuccesorRequest.ProtoReflect.Descriptor instead.
+func (*FindSuccesorRequest) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{19}
+}
+
+func (x *FindSuccesorRequest) GetID() []byte {
+	if x != nil {
+		return x.ID
+	}
+	return nil
+}
+
 // GetRequest contains the key of a desired value.
 type GetRequest struct {
 	state         protoimpl.MessageState
@@ -224,7 +888,7 @@ type GetRequest struct {
 func (x *GetRequest) Reset() {
 	*x = GetRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[4]
+		mi := &file_server_proto_chord_proto_msgTypes[20]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -237,7 +901,7 @@ func (x *GetRequest) String() string {
 func (*GetRequest) ProtoMessage() {}
 
 func (x *GetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[4]
+	mi := &file_server_proto_chord_proto_msgTypes[20]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -250,7 +914,7 @@ func (x *GetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetRequest.ProtoReflect.Descriptor instead.
 func (*GetRequest) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{4}
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetRequest) GetKey() string {
@@ -274,54 +938,6 @@ func (x *GetRequest) GetIP() string {
 	return ""
 }
 
-// GetResponse contains the value of a requested key.
-type GetResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	Value []byte `protobuf:"bytes,1,opt,name=Value,proto3" json:"Value,omitempty"`
-}
-
-func (x *GetResponse) Reset() {
-	*x = GetResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[5]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *GetResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetResponse) ProtoMessage() {}
-
-func (x *GetResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[5]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
-func (*GetResponse) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *GetResponse) GetValue() []byte {
-	if x != nil {
-		return x.Value
-	}
-	return nil
-}
-
 // SetRequest contains the <key, value> pair to set on storage.
 type SetRequest struct {
 	state         protoimpl.MessageState
@@ -338,7 +954,7 @@ type SetRequest struct {
 func (x *SetRequest) Reset() {
 	*x = SetRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[6]
+		mi := &file_server_proto_chord_proto_msgTypes[21]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -351,7 +967,7 @@ func (x *SetRequest) String() string {
 func (*SetRequest) ProtoMessage() {}
 
 func (x *SetRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[6]
+	mi := &file_server_proto_chord_proto_msgTypes[21]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -364,7 +980,7 @@ func (x *SetRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetRequest.ProtoReflect.Descriptor instead.
 func (*SetRequest) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{6}
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *SetRequest) GetKey() string {
@@ -417,7 +1033,7 @@ type DeleteRequest struct {
 func (x *DeleteRequest) Reset() {
 	*x = DeleteRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[7]
+		mi := &file_server_proto_chord_proto_msgTypes[22]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -430,7 +1046,7 @@ func (x *DeleteRequest) String() string {
 func (*DeleteRequest) ProtoMessage() {}
 
 func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[7]
+	mi := &file_server_proto_chord_proto_msgTypes[22]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -443,7 +1059,7 @@ func (x *DeleteRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteRequest.ProtoReflect.Descriptor instead.
 func (*DeleteRequest) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{7}
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *DeleteRequest) GetKey() string {
@@ -474,62 +1090,6 @@ func (x *DeleteRequest) GetIP() string {
 	return ""
 }
 
-// PartitionResponse contains the contains the <key, value> pairs to return.
-type PartitionResponse struct {
-	state         protoimpl.MessageState
-	sizeCache     protoimpl.SizeCache
-	unknownFields protoimpl.UnknownFields
-
-	In  map[string][]byte `protobuf:"bytes,1,rep,name=in,proto3" json:"in,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-	Out map[string][]byte `protobuf:"bytes,2,rep,name=out,proto3" json:"out,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
-}
-
-func (x *PartitionResponse) Reset() {
-	*x = PartitionResponse{}
-	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[8]
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		ms.StoreMessageInfo(mi)
-	}
-}
-
-func (x *PartitionResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*PartitionResponse) ProtoMessage() {}
-
-func (x *PartitionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[8]
-	if protoimpl.UnsafeEnabled && x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use PartitionResponse.ProtoReflect.Descriptor instead.
-func (*PartitionResponse) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{8}
-}
-
-func (x *PartitionResponse) GetIn() map[string][]byte {
-	if x != nil {
-		return x.In
-	}
-	return nil
-}
-
-func (x *PartitionResponse) GetOut() map[string][]byte {
-	if x != nil {
-		return x.Out
-	}
-	return nil
-}
-
 // ExtendRequest contains the <key, value> pairs to set on the storage.
 type ExtendRequest struct {
 	state         protoimpl.MessageState
@@ -542,7 +1102,7 @@ type ExtendRequest struct {
 func (x *ExtendRequest) Reset() {
 	*x = ExtendRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[9]
+		mi := &file_server_proto_chord_proto_msgTypes[23]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -555,7 +1115,7 @@ func (x *ExtendRequest) String() string {
 func (*ExtendRequest) ProtoMessage() {}
 
 func (x *ExtendRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[9]
+	mi := &file_server_proto_chord_proto_msgTypes[23]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -568,7 +1128,7 @@ func (x *ExtendRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ExtendRequest.ProtoReflect.Descriptor instead.
 func (*ExtendRequest) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{9}
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *ExtendRequest) GetDictionary() map[string][]byte {
@@ -590,7 +1150,7 @@ type DiscardRequest struct {
 func (x *DiscardRequest) Reset() {
 	*x = DiscardRequest{}
 	if protoimpl.UnsafeEnabled {
-		mi := &file_server_proto_chord_proto_msgTypes[10]
+		mi := &file_server_proto_chord_proto_msgTypes[24]
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		ms.StoreMessageInfo(mi)
 	}
@@ -603,7 +1163,7 @@ func (x *DiscardRequest) String() string {
 func (*DiscardRequest) ProtoMessage() {}
 
 func (x *DiscardRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_server_proto_chord_proto_msgTypes[10]
+	mi := &file_server_proto_chord_proto_msgTypes[24]
 	if protoimpl.UnsafeEnabled && x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -616,7 +1176,7 @@ func (x *DiscardRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DiscardRequest.ProtoReflect.Descriptor instead.
 func (*DiscardRequest) Descriptor() ([]byte, []int) {
-	return file_server_proto_chord_proto_rawDescGZIP(), []int{10}
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *DiscardRequest) GetKeys() []string {
@@ -626,109 +1186,262 @@ func (x *DiscardRequest) GetKeys() []string {
 	return nil
 }
 
+// Otras Respuestas
+// GetResponse contains the value of a requested key.
+type GetResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Value []byte `protobuf:"bytes,1,opt,name=Value,proto3" json:"Value,omitempty"`
+}
+
+func (x *GetResponse) Reset() {
+	*x = GetResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[25]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *GetResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetResponse) ProtoMessage() {}
+
+func (x *GetResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[25]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetResponse.ProtoReflect.Descriptor instead.
+func (*GetResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{25}
+}
+
+func (x *GetResponse) GetValue() []byte {
+	if x != nil {
+		return x.Value
+	}
+	return nil
+}
+
+// PartitionResponse contains the contains the <key, value> pairs to return.
+type PartitionResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	In  map[string][]byte `protobuf:"bytes,1,rep,name=in,proto3" json:"in,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+	Out map[string][]byte `protobuf:"bytes,2,rep,name=out,proto3" json:"out,omitempty" protobuf_key:"bytes,1,opt,name=key,proto3" protobuf_val:"bytes,2,opt,name=value,proto3"`
+}
+
+func (x *PartitionResponse) Reset() {
+	*x = PartitionResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_server_proto_chord_proto_msgTypes[26]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *PartitionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PartitionResponse) ProtoMessage() {}
+
+func (x *PartitionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_server_proto_chord_proto_msgTypes[26]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PartitionResponse.ProtoReflect.Descriptor instead.
+func (*PartitionResponse) Descriptor() ([]byte, []int) {
+	return file_server_proto_chord_proto_rawDescGZIP(), []int{26}
+}
+
+func (x *PartitionResponse) GetIn() map[string][]byte {
+	if x != nil {
+		return x.In
+	}
+	return nil
+}
+
+func (x *PartitionResponse) GetOut() map[string][]byte {
+	if x != nil {
+		return x.Out
+	}
+	return nil
+}
+
 var File_server_proto_chord_proto protoreflect.FileDescriptor
 
 var file_server_proto_chord_proto_rawDesc = []byte{
 	0x0a, 0x18, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2f, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x2f, 0x63,
 	0x68, 0x6f, 0x72, 0x64, 0x2e, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x12, 0x05, 0x63, 0x68, 0x6f, 0x72,
-	0x64, 0x22, 0x0e, 0x0a, 0x0c, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
-	0x74, 0x22, 0x0f, 0x0a, 0x0d, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
-	0x73, 0x65, 0x22, 0x14, 0x0a, 0x02, 0x49, 0x44, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x44, 0x18, 0x01,
-	0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x49, 0x44, 0x22, 0x3a, 0x0a, 0x04, 0x4e, 0x6f, 0x64, 0x65,
+	0x64, 0x22, 0x3a, 0x0a, 0x04, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x44, 0x18,
+	0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x49, 0x44, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49, 0x50, 0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72,
+	0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x22, 0x17, 0x0a,
+	0x15, 0x47, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52,
+	0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x15, 0x0a, 0x13, 0x47, 0x65, 0x74, 0x53, 0x75, 0x63,
+	0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x0e, 0x0a,
+	0x0c, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x22, 0x12, 0x0a,
+	0x10, 0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x22, 0x10, 0x0a, 0x0e, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f,
+	0x6e, 0x73, 0x65, 0x22, 0x18, 0x0a, 0x16, 0x53, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63,
+	0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x16, 0x0a,
+	0x14, 0x53, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x10, 0x0a, 0x0e, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x0f, 0x0a, 0x0d, 0x43, 0x68, 0x65, 0x63, 0x6b,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x0d, 0x0a, 0x0b, 0x53, 0x65, 0x74, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x10, 0x0a, 0x0e, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x11, 0x0a, 0x0f, 0x44, 0x69, 0x73,
+	0x63, 0x61, 0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x22, 0x46, 0x0a, 0x15,
+	0x53, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2d, 0x0a, 0x0b, 0x70, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65,
+	0x73, 0x73, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x63, 0x68, 0x6f,
+	0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65,
+	0x73, 0x73, 0x6f, 0x72, 0x22, 0x40, 0x0a, 0x13, 0x53, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63, 0x65,
+	0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x29, 0x0a, 0x09, 0x73,
+	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b,
+	0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x09, 0x73, 0x75, 0x63,
+	0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x22, 0x34, 0x0a, 0x0d, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x23, 0x0a, 0x06, 0x6e, 0x6f, 0x74, 0x69, 0x66,
+	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e,
+	0x4e, 0x6f, 0x64, 0x65, 0x52, 0x06, 0x6e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x22, 0x47, 0x0a, 0x16,
+	0x47, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2d, 0x0a, 0x0b, 0x70, 0x72, 0x65, 0x64, 0x65, 0x63,
+	0x65, 0x73, 0x73, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x63, 0x68,
+	0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x0b, 0x70, 0x72, 0x65, 0x64, 0x65, 0x63,
+	0x65, 0x73, 0x73, 0x6f, 0x72, 0x22, 0x41, 0x0a, 0x14, 0x47, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63,
+	0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x29, 0x0a,
+	0x09, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b,
+	0x32, 0x0b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52, 0x09, 0x73,
+	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x22, 0x3f, 0x0a, 0x14, 0x46, 0x69, 0x6e, 0x64,
+	0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x27, 0x0a, 0x08, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x6f, 0x72, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x0b, 0x32, 0x0b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x52,
+	0x08, 0x73, 0x75, 0x63, 0x63, 0x65, 0x73, 0x6f, 0x72, 0x22, 0x25, 0x0a, 0x13, 0x46, 0x69, 0x6e,
+	0x64, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
 	0x12, 0x0e, 0x0a, 0x02, 0x49, 0x44, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x02, 0x49, 0x44,
-	0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18, 0x02, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49, 0x50,
-	0x12, 0x12, 0x0a, 0x04, 0x70, 0x6f, 0x72, 0x74, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09, 0x52, 0x04,
-	0x70, 0x6f, 0x72, 0x74, 0x22, 0x42, 0x0a, 0x0a, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x22, 0x42, 0x0a, 0x0a, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10,
+	0x0a, 0x03, 0x4b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x4b, 0x65, 0x79,
+	0x12, 0x12, 0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04,
+	0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18, 0x03, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x02, 0x49, 0x50, 0x22, 0x72, 0x0a, 0x0a, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65,
 	0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x4b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x4b, 0x65, 0x79, 0x12, 0x12, 0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x02, 0x20, 0x01,
-	0x28, 0x08, 0x52, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49, 0x50, 0x22, 0x23, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x52,
-	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0x72, 0x0a,
-	0x0a, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x4b,
-	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x4b, 0x65, 0x79, 0x12, 0x14, 0x0a,
-	0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x56, 0x61,
-	0x6c, 0x75, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x52, 0x65, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x18, 0x03,
-	0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x52, 0x65, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x12, 0x12, 0x0a,
-	0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x04, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x4c, 0x6f, 0x63,
-	0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18, 0x05, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49,
-	0x50, 0x22, 0x5f, 0x0a, 0x0d, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
-	0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x4b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x4b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x52, 0x65, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x18,
-	0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x52, 0x65, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x12, 0x12,
-	0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x04, 0x4c, 0x6f,
-	0x63, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18, 0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02,
-	0x49, 0x50, 0x22, 0xe9, 0x01, 0x0a, 0x11, 0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e,
-	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x30, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x50, 0x61, 0x72,
-	0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x49,
-	0x6e, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x02, 0x69, 0x6e, 0x12, 0x33, 0x0a, 0x03, 0x6f, 0x75,
-	0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x21, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e,
+	0x03, 0x4b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20,
+	0x01, 0x28, 0x0c, 0x52, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x12, 0x18, 0x0a, 0x07, 0x52, 0x65,
+	0x70, 0x6c, 0x69, 0x63, 0x61, 0x18, 0x03, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x52, 0x65, 0x70,
+	0x6c, 0x69, 0x63, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x04, 0x20, 0x01,
+	0x28, 0x08, 0x52, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18, 0x05,
+	0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49, 0x50, 0x22, 0x5f, 0x0a, 0x0d, 0x44, 0x65, 0x6c, 0x65,
+	0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x10, 0x0a, 0x03, 0x4b, 0x65, 0x79,
+	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x4b, 0x65, 0x79, 0x12, 0x18, 0x0a, 0x07, 0x52,
+	0x65, 0x70, 0x6c, 0x69, 0x63, 0x61, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52, 0x07, 0x52, 0x65,
+	0x70, 0x6c, 0x69, 0x63, 0x61, 0x12, 0x12, 0x0a, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x18, 0x03, 0x20,
+	0x01, 0x28, 0x08, 0x52, 0x04, 0x4c, 0x6f, 0x63, 0x6b, 0x12, 0x0e, 0x0a, 0x02, 0x49, 0x50, 0x18,
+	0x04, 0x20, 0x01, 0x28, 0x09, 0x52, 0x02, 0x49, 0x50, 0x22, 0x94, 0x01, 0x0a, 0x0d, 0x45, 0x78,
+	0x74, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x44, 0x0a, 0x0a, 0x64,
+	0x69, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x72, 0x79, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32,
+	0x24, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x52, 0x65,
+	0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x44, 0x69, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x72, 0x79,
+	0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0a, 0x64, 0x69, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x72,
+	0x79, 0x1a, 0x3d, 0x0a, 0x0f, 0x44, 0x69, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x72, 0x79, 0x45,
+	0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18,
+	0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01,
+	0x22, 0x24, 0x0a, 0x0e, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6b, 0x65, 0x79, 0x73, 0x18, 0x01, 0x20, 0x03, 0x28, 0x09,
+	0x52, 0x04, 0x6b, 0x65, 0x79, 0x73, 0x22, 0x23, 0x0a, 0x0b, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73,
+	0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x01,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x56, 0x61, 0x6c, 0x75, 0x65, 0x22, 0xe9, 0x01, 0x0a, 0x11,
 	0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x2e, 0x4f, 0x75, 0x74, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x03, 0x6f, 0x75, 0x74, 0x1a,
-	0x35, 0x0a, 0x07, 0x49, 0x6e, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65,
-	0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05,
-	0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c,
-	0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x1a, 0x36, 0x0a, 0x08, 0x4f, 0x75, 0x74, 0x45, 0x6e, 0x74,
-	0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
-	0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20,
-	0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x94,
-	0x01, 0x0a, 0x0d, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
-	0x12, 0x44, 0x0a, 0x0a, 0x64, 0x69, 0x63, 0x74, 0x69, 0x6f, 0x6e, 0x61, 0x72, 0x79, 0x18, 0x01,
-	0x20, 0x03, 0x28, 0x0b, 0x32, 0x24, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x78, 0x74,
-	0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x2e, 0x44, 0x69, 0x63, 0x74, 0x69,
-	0x6f, 0x6e, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52, 0x0a, 0x64, 0x69, 0x63, 0x74,
-	0x69, 0x6f, 0x6e, 0x61, 0x72, 0x79, 0x1a, 0x3d, 0x0a, 0x0f, 0x44, 0x69, 0x63, 0x74, 0x69, 0x6f,
-	0x6e, 0x61, 0x72, 0x79, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79,
-	0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76,
-	0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75,
-	0x65, 0x3a, 0x02, 0x38, 0x01, 0x22, 0x24, 0x0a, 0x0e, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x12, 0x0a, 0x04, 0x6b, 0x65, 0x79, 0x73, 0x18,
-	0x01, 0x20, 0x03, 0x28, 0x09, 0x52, 0x04, 0x6b, 0x65, 0x79, 0x73, 0x32, 0x9d, 0x05, 0x0a, 0x05,
-	0x43, 0x68, 0x6f, 0x72, 0x64, 0x12, 0x32, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64,
-	0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x12, 0x13, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e,
-	0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0b, 0x2e, 0x63,
-	0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x30, 0x0a, 0x0c, 0x47, 0x65, 0x74,
-	0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x12, 0x13, 0x2e, 0x63, 0x68, 0x6f, 0x72,
-	0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x0b,
-	0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x33, 0x0a, 0x0e, 0x53,
-	0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x12, 0x0b, 0x2e,
-	0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x1a, 0x14, 0x2e, 0x63, 0x68, 0x6f,
-	0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
-	0x12, 0x31, 0x0a, 0x0c, 0x53, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72,
-	0x12, 0x0b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x1a, 0x14, 0x2e,
-	0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a, 0x0d, 0x46, 0x69, 0x6e, 0x64, 0x53, 0x75, 0x63, 0x63, 0x65,
-	0x73, 0x73, 0x6f, 0x72, 0x12, 0x09, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x49, 0x44, 0x1a,
-	0x0b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x64, 0x65, 0x12, 0x2b, 0x0a, 0x06,
-	0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x0b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e,
-	0x6f, 0x64, 0x65, 0x1a, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74,
-	0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x32, 0x0a, 0x05, 0x43, 0x68, 0x65,
-	0x63, 0x6b, 0x12, 0x13, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e,
-	0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a,
-	0x03, 0x47, 0x65, 0x74, 0x12, 0x11, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x12, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e,
-	0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2e, 0x0a, 0x03, 0x53,
-	0x65, 0x74, 0x12, 0x11, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x53, 0x65, 0x74, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d,
-	0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a, 0x06, 0x44,
-	0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x44, 0x65,
-	0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x63, 0x68,
-	0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
-	0x65, 0x12, 0x3a, 0x0a, 0x09, 0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x13,
-	0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x71, 0x75,
-	0x65, 0x73, 0x74, 0x1a, 0x18, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x50, 0x61, 0x72, 0x74,
-	0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x34, 0x0a,
-	0x06, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x12, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e,
-	0x45, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e,
-	0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d, 0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f,
-	0x6e, 0x73, 0x65, 0x12, 0x36, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64, 0x12, 0x15,
-	0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64, 0x52, 0x65,
-	0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x6d,
-	0x70, 0x74, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x16, 0x5a, 0x14, 0x2e,
-	0x2f, 0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2f, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2f, 0x63, 0x68,
-	0x6f, 0x72, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x65, 0x12, 0x30, 0x0a, 0x02, 0x69, 0x6e, 0x18, 0x01, 0x20, 0x03, 0x28, 0x0b, 0x32, 0x20, 0x2e,
+	0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52,
+	0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x49, 0x6e, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x52,
+	0x02, 0x69, 0x6e, 0x12, 0x33, 0x0a, 0x03, 0x6f, 0x75, 0x74, 0x18, 0x02, 0x20, 0x03, 0x28, 0x0b,
+	0x32, 0x21, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69,
+	0x6f, 0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x2e, 0x4f, 0x75, 0x74, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x52, 0x03, 0x6f, 0x75, 0x74, 0x1a, 0x35, 0x0a, 0x07, 0x49, 0x6e, 0x45, 0x6e,
+	0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b, 0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09,
+	0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02,
+	0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x1a,
+	0x36, 0x0a, 0x08, 0x4f, 0x75, 0x74, 0x45, 0x6e, 0x74, 0x72, 0x79, 0x12, 0x10, 0x0a, 0x03, 0x6b,
+	0x65, 0x79, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52, 0x03, 0x6b, 0x65, 0x79, 0x12, 0x14, 0x0a,
+	0x05, 0x76, 0x61, 0x6c, 0x75, 0x65, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0c, 0x52, 0x05, 0x76, 0x61,
+	0x6c, 0x75, 0x65, 0x3a, 0x02, 0x38, 0x01, 0x32, 0xb0, 0x06, 0x0a, 0x05, 0x43, 0x68, 0x6f, 0x72,
+	0x64, 0x12, 0x4d, 0x0a, 0x0e, 0x47, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73,
+	0x73, 0x6f, 0x72, 0x12, 0x1c, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74, 0x50,
+	0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x1d, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74, 0x50, 0x72, 0x65,
+	0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x47, 0x0a, 0x0c, 0x47, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72,
+	0x12, 0x1a, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63,
+	0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x63,
+	0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f,
+	0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4d, 0x0a, 0x0e, 0x53, 0x65, 0x74,
+	0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x12, 0x1c, 0x2e, 0x63, 0x68,
+	0x6f, 0x72, 0x64, 0x2e, 0x53, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73,
+	0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x63, 0x68, 0x6f, 0x72,
+	0x64, 0x2e, 0x53, 0x65, 0x74, 0x50, 0x72, 0x65, 0x64, 0x65, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x47, 0x0a, 0x0c, 0x53, 0x65, 0x74, 0x53,
+	0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x12, 0x1a, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64,
+	0x2e, 0x53, 0x65, 0x74, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71,
+	0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x53, 0x65, 0x74,
+	0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73,
+	0x65, 0x12, 0x48, 0x0a, 0x0d, 0x46, 0x69, 0x6e, 0x64, 0x53, 0x75, 0x63, 0x63, 0x65, 0x73, 0x73,
+	0x6f, 0x72, 0x12, 0x1a, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x46, 0x69, 0x6e, 0x64, 0x53,
+	0x75, 0x63, 0x63, 0x65, 0x73, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1b,
+	0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x46, 0x69, 0x6e, 0x64, 0x53, 0x75, 0x63, 0x63, 0x65,
+	0x73, 0x6f, 0x72, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x06, 0x4e,
+	0x6f, 0x74, 0x69, 0x66, 0x79, 0x12, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f,
+	0x74, 0x69, 0x66, 0x79, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x63, 0x68,
+	0x6f, 0x72, 0x64, 0x2e, 0x4e, 0x6f, 0x74, 0x69, 0x66, 0x79, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x32, 0x0a, 0x05, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x12, 0x13, 0x2e, 0x63, 0x68,
+	0x6f, 0x72, 0x64, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x43, 0x68, 0x65, 0x63, 0x6b, 0x52, 0x65,
+	0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x03, 0x47, 0x65, 0x74, 0x12, 0x11, 0x2e,
+	0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74,
+	0x1a, 0x12, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x47, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70,
+	0x6f, 0x6e, 0x73, 0x65, 0x12, 0x2c, 0x0a, 0x03, 0x53, 0x65, 0x74, 0x12, 0x11, 0x2e, 0x63, 0x68,
+	0x6f, 0x72, 0x64, 0x2e, 0x53, 0x65, 0x74, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x12,
+	0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x53, 0x65, 0x74, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x35, 0x0a, 0x06, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x12, 0x14, 0x2e, 0x63,
+	0x68, 0x6f, 0x72, 0x64, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x15, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x44, 0x65, 0x6c, 0x65, 0x74,
+	0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x3e, 0x0a, 0x09, 0x50, 0x61, 0x72,
+	0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x12, 0x17, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x50,
+	0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f, 0x6e, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a,
+	0x18, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x50, 0x61, 0x72, 0x74, 0x69, 0x74, 0x69, 0x6f,
+	0x6e, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x35, 0x0a, 0x06, 0x45, 0x78, 0x74,
+	0x65, 0x6e, 0x64, 0x12, 0x14, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x45, 0x78, 0x74, 0x65,
+	0x6e, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x15, 0x2e, 0x63, 0x68, 0x6f, 0x72,
+	0x64, 0x2e, 0x45, 0x78, 0x74, 0x65, 0x6e, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65,
+	0x12, 0x38, 0x0a, 0x07, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64, 0x12, 0x15, 0x2e, 0x63, 0x68,
+	0x6f, 0x72, 0x64, 0x2e, 0x44, 0x69, 0x73, 0x63, 0x61, 0x72, 0x64, 0x52, 0x65, 0x71, 0x75, 0x65,
+	0x73, 0x74, 0x1a, 0x16, 0x2e, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2e, 0x44, 0x69, 0x73, 0x63, 0x61,
+	0x72, 0x64, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x42, 0x16, 0x5a, 0x14, 0x2e, 0x2f,
+	0x73, 0x65, 0x72, 0x76, 0x65, 0x72, 0x2f, 0x63, 0x68, 0x6f, 0x72, 0x64, 0x2f, 0x63, 0x68, 0x6f,
+	0x72, 0x64, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -743,58 +1456,80 @@ func file_server_proto_chord_proto_rawDescGZIP() []byte {
 	return file_server_proto_chord_proto_rawDescData
 }
 
-var file_server_proto_chord_proto_msgTypes = make([]protoimpl.MessageInfo, 14)
+var file_server_proto_chord_proto_msgTypes = make([]protoimpl.MessageInfo, 30)
 var file_server_proto_chord_proto_goTypes = []interface{}{
-	(*EmptyRequest)(nil),      // 0: chord.EmptyRequest
-	(*EmptyResponse)(nil),     // 1: chord.EmptyResponse
-	(*ID)(nil),                // 2: chord.ID
-	(*Node)(nil),              // 3: chord.Node
-	(*GetRequest)(nil),        // 4: chord.GetRequest
-	(*GetResponse)(nil),       // 5: chord.GetResponse
-	(*SetRequest)(nil),        // 6: chord.SetRequest
-	(*DeleteRequest)(nil),     // 7: chord.DeleteRequest
-	(*PartitionResponse)(nil), // 8: chord.PartitionResponse
-	(*ExtendRequest)(nil),     // 9: chord.ExtendRequest
-	(*DiscardRequest)(nil),    // 10: chord.DiscardRequest
-	nil,                       // 11: chord.PartitionResponse.InEntry
-	nil,                       // 12: chord.PartitionResponse.OutEntry
-	nil,                       // 13: chord.ExtendRequest.DictionaryEntry
+	(*Node)(nil),                   // 0: chord.Node
+	(*GetPredecessorRequest)(nil),  // 1: chord.GetPredecessorRequest
+	(*GetSuccessorRequest)(nil),    // 2: chord.GetSuccessorRequest
+	(*CheckRequest)(nil),           // 3: chord.CheckRequest
+	(*PartitionRequest)(nil),       // 4: chord.PartitionRequest
+	(*ExtendResponse)(nil),         // 5: chord.ExtendResponse
+	(*SetPredecessorResponse)(nil), // 6: chord.SetPredecessorResponse
+	(*SetSuccessorResponse)(nil),   // 7: chord.SetSuccessorResponse
+	(*NotifyResponse)(nil),         // 8: chord.NotifyResponse
+	(*CheckResponse)(nil),          // 9: chord.CheckResponse
+	(*SetResponse)(nil),            // 10: chord.SetResponse
+	(*DeleteResponse)(nil),         // 11: chord.DeleteResponse
+	(*DiscardResponse)(nil),        // 12: chord.DiscardResponse
+	(*SetPredecessorRequest)(nil),  // 13: chord.SetPredecessorRequest
+	(*SetSuccessorRequest)(nil),    // 14: chord.SetSuccessorRequest
+	(*NotifyRequest)(nil),          // 15: chord.NotifyRequest
+	(*GetPredecessorResponse)(nil), // 16: chord.GetPredecessorResponse
+	(*GetSuccessorResponse)(nil),   // 17: chord.GetSuccessorResponse
+	(*FindSuccesorResponse)(nil),   // 18: chord.FindSuccesorResponse
+	(*FindSuccesorRequest)(nil),    // 19: chord.FindSuccesorRequest
+	(*GetRequest)(nil),             // 20: chord.GetRequest
+	(*SetRequest)(nil),             // 21: chord.SetRequest
+	(*DeleteRequest)(nil),          // 22: chord.DeleteRequest
+	(*ExtendRequest)(nil),          // 23: chord.ExtendRequest
+	(*DiscardRequest)(nil),         // 24: chord.DiscardRequest
+	(*GetResponse)(nil),            // 25: chord.GetResponse
+	(*PartitionResponse)(nil),      // 26: chord.PartitionResponse
+	nil,                            // 27: chord.ExtendRequest.DictionaryEntry
+	nil,                            // 28: chord.PartitionResponse.InEntry
+	nil,                            // 29: chord.PartitionResponse.OutEntry
 }
 var file_server_proto_chord_proto_depIdxs = []int32{
-	11, // 0: chord.PartitionResponse.in:type_name -> chord.PartitionResponse.InEntry
-	12, // 1: chord.PartitionResponse.out:type_name -> chord.PartitionResponse.OutEntry
-	13, // 2: chord.ExtendRequest.dictionary:type_name -> chord.ExtendRequest.DictionaryEntry
-	0,  // 3: chord.Chord.GetPredecessor:input_type -> chord.EmptyRequest
-	0,  // 4: chord.Chord.GetSuccessor:input_type -> chord.EmptyRequest
-	3,  // 5: chord.Chord.SetPredecessor:input_type -> chord.Node
-	3,  // 6: chord.Chord.SetSuccessor:input_type -> chord.Node
-	2,  // 7: chord.Chord.FindSuccessor:input_type -> chord.ID
-	3,  // 8: chord.Chord.Notify:input_type -> chord.Node
-	0,  // 9: chord.Chord.Check:input_type -> chord.EmptyRequest
-	4,  // 10: chord.Chord.Get:input_type -> chord.GetRequest
-	6,  // 11: chord.Chord.Set:input_type -> chord.SetRequest
-	7,  // 12: chord.Chord.Delete:input_type -> chord.DeleteRequest
-	0,  // 13: chord.Chord.Partition:input_type -> chord.EmptyRequest
-	9,  // 14: chord.Chord.Extend:input_type -> chord.ExtendRequest
-	10, // 15: chord.Chord.Discard:input_type -> chord.DiscardRequest
-	3,  // 16: chord.Chord.GetPredecessor:output_type -> chord.Node
-	3,  // 17: chord.Chord.GetSuccessor:output_type -> chord.Node
-	1,  // 18: chord.Chord.SetPredecessor:output_type -> chord.EmptyResponse
-	1,  // 19: chord.Chord.SetSuccessor:output_type -> chord.EmptyResponse
-	3,  // 20: chord.Chord.FindSuccessor:output_type -> chord.Node
-	1,  // 21: chord.Chord.Notify:output_type -> chord.EmptyResponse
-	1,  // 22: chord.Chord.Check:output_type -> chord.EmptyResponse
-	5,  // 23: chord.Chord.Get:output_type -> chord.GetResponse
-	1,  // 24: chord.Chord.Set:output_type -> chord.EmptyResponse
-	1,  // 25: chord.Chord.Delete:output_type -> chord.EmptyResponse
-	8,  // 26: chord.Chord.Partition:output_type -> chord.PartitionResponse
-	1,  // 27: chord.Chord.Extend:output_type -> chord.EmptyResponse
-	1,  // 28: chord.Chord.Discard:output_type -> chord.EmptyResponse
-	16, // [16:29] is the sub-list for method output_type
-	3,  // [3:16] is the sub-list for method input_type
-	3,  // [3:3] is the sub-list for extension type_name
-	3,  // [3:3] is the sub-list for extension extendee
-	0,  // [0:3] is the sub-list for field type_name
+	0,  // 0: chord.SetPredecessorRequest.predecessor:type_name -> chord.Node
+	0,  // 1: chord.SetSuccessorRequest.successor:type_name -> chord.Node
+	0,  // 2: chord.NotifyRequest.notify:type_name -> chord.Node
+	0,  // 3: chord.GetPredecessorResponse.predecessor:type_name -> chord.Node
+	0,  // 4: chord.GetSuccessorResponse.successor:type_name -> chord.Node
+	0,  // 5: chord.FindSuccesorResponse.succesor:type_name -> chord.Node
+	27, // 6: chord.ExtendRequest.dictionary:type_name -> chord.ExtendRequest.DictionaryEntry
+	28, // 7: chord.PartitionResponse.in:type_name -> chord.PartitionResponse.InEntry
+	29, // 8: chord.PartitionResponse.out:type_name -> chord.PartitionResponse.OutEntry
+	1,  // 9: chord.Chord.GetPredecessor:input_type -> chord.GetPredecessorRequest
+	2,  // 10: chord.Chord.GetSuccessor:input_type -> chord.GetSuccessorRequest
+	13, // 11: chord.Chord.SetPredecessor:input_type -> chord.SetPredecessorRequest
+	14, // 12: chord.Chord.SetSuccessor:input_type -> chord.SetSuccessorRequest
+	19, // 13: chord.Chord.FindSuccessor:input_type -> chord.FindSuccesorRequest
+	15, // 14: chord.Chord.Notify:input_type -> chord.NotifyRequest
+	3,  // 15: chord.Chord.Check:input_type -> chord.CheckRequest
+	20, // 16: chord.Chord.Get:input_type -> chord.GetRequest
+	21, // 17: chord.Chord.Set:input_type -> chord.SetRequest
+	22, // 18: chord.Chord.Delete:input_type -> chord.DeleteRequest
+	4,  // 19: chord.Chord.Partition:input_type -> chord.PartitionRequest
+	23, // 20: chord.Chord.Extend:input_type -> chord.ExtendRequest
+	24, // 21: chord.Chord.Discard:input_type -> chord.DiscardRequest
+	16, // 22: chord.Chord.GetPredecessor:output_type -> chord.GetPredecessorResponse
+	17, // 23: chord.Chord.GetSuccessor:output_type -> chord.GetSuccessorResponse
+	6,  // 24: chord.Chord.SetPredecessor:output_type -> chord.SetPredecessorResponse
+	7,  // 25: chord.Chord.SetSuccessor:output_type -> chord.SetSuccessorResponse
+	18, // 26: chord.Chord.FindSuccessor:output_type -> chord.FindSuccesorResponse
+	8,  // 27: chord.Chord.Notify:output_type -> chord.NotifyResponse
+	9,  // 28: chord.Chord.Check:output_type -> chord.CheckResponse
+	25, // 29: chord.Chord.Get:output_type -> chord.GetResponse
+	10, // 30: chord.Chord.Set:output_type -> chord.SetResponse
+	11, // 31: chord.Chord.Delete:output_type -> chord.DeleteResponse
+	26, // 32: chord.Chord.Partition:output_type -> chord.PartitionResponse
+	5,  // 33: chord.Chord.Extend:output_type -> chord.ExtendResponse
+	12, // 34: chord.Chord.Discard:output_type -> chord.DiscardResponse
+	22, // [22:35] is the sub-list for method output_type
+	9,  // [9:22] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_server_proto_chord_proto_init() }
@@ -804,42 +1539,6 @@ func file_server_proto_chord_proto_init() {
 	}
 	if !protoimpl.UnsafeEnabled {
 		file_server_proto_chord_proto_msgTypes[0].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EmptyRequest); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_server_proto_chord_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*EmptyResponse); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_server_proto_chord_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ID); i {
-			case 0:
-				return &v.state
-			case 1:
-				return &v.sizeCache
-			case 2:
-				return &v.unknownFields
-			default:
-				return nil
-			}
-		}
-		file_server_proto_chord_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*Node); i {
 			case 0:
 				return &v.state
@@ -851,8 +1550,44 @@ func file_server_proto_chord_proto_init() {
 				return nil
 			}
 		}
+		file_server_proto_chord_proto_msgTypes[1].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetPredecessorRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[2].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetSuccessorRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[3].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*CheckRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 		file_server_proto_chord_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetRequest); i {
+			switch v := v.(*PartitionRequest); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -864,7 +1599,7 @@ func file_server_proto_chord_proto_init() {
 			}
 		}
 		file_server_proto_chord_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*GetResponse); i {
+			switch v := v.(*ExtendResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -876,7 +1611,7 @@ func file_server_proto_chord_proto_init() {
 			}
 		}
 		file_server_proto_chord_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*SetRequest); i {
+			switch v := v.(*SetPredecessorResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -888,7 +1623,7 @@ func file_server_proto_chord_proto_init() {
 			}
 		}
 		file_server_proto_chord_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*DeleteRequest); i {
+			switch v := v.(*SetSuccessorResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -900,7 +1635,7 @@ func file_server_proto_chord_proto_init() {
 			}
 		}
 		file_server_proto_chord_proto_msgTypes[8].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*PartitionResponse); i {
+			switch v := v.(*NotifyResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -912,7 +1647,7 @@ func file_server_proto_chord_proto_init() {
 			}
 		}
 		file_server_proto_chord_proto_msgTypes[9].Exporter = func(v interface{}, i int) interface{} {
-			switch v := v.(*ExtendRequest); i {
+			switch v := v.(*CheckResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -924,7 +1659,199 @@ func file_server_proto_chord_proto_init() {
 			}
 		}
 		file_server_proto_chord_proto_msgTypes[10].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[11].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[12].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DiscardResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[13].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetPredecessorRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[14].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetSuccessorRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[15].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*NotifyRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[16].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetPredecessorResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[17].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetSuccessorResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[18].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FindSuccesorResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[19].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*FindSuccesorRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[20].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[21].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SetRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[22].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*DeleteRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[23].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ExtendRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[24].Exporter = func(v interface{}, i int) interface{} {
 			switch v := v.(*DiscardRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[25].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*GetResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_server_proto_chord_proto_msgTypes[26].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*PartitionResponse); i {
 			case 0:
 				return &v.state
 			case 1:
@@ -942,7 +1869,7 @@ func file_server_proto_chord_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_server_proto_chord_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   14,
+			NumMessages:   30,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
