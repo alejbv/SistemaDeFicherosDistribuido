@@ -192,7 +192,7 @@ func (services *GRPCServices) Connect(addr string) (*RemoteNode, error) {
 	return remoteNode, nil
 }
 
-// GetPredecessor returns the node believed to be the current predecessor of a remote node.
+// GetPredecessor devuelve el nodo que se cree que es el actual predecesor de un nodo remoto.
 func (services *GRPCServices) GetPredecessor(node *chord.Node) (*chord.Node, error) {
 	if node == nil {
 		return nil, errors.New("No se puede establecer conexion con un nodo nulo.\n")
@@ -216,59 +216,65 @@ func (services *GRPCServices) GetPredecessor(node *chord.Node) (*chord.Node, err
 // GetSuccessor returns the node believed to be the current successor of a remote node.
 func (services *GRPCServices) GetSuccessor(node *chord.Node) (*chord.Node, error) {
 	if node == nil {
-		return nil, errors.New("Cannot establish connection with a null node.\n")
+		return nil, errors.New("No se puede establecer una conexion con un nodo vacio.\n")
 	}
 
-	remoteNode, err := services.Connect(node.IP + ":" + node.Port) // Establish connection with the remote node.
+	// Estableciendo conexion con un nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
 	if err != nil {
 		return nil, err
 	}
 
-	// Obtain the context of the connection and set the timeout of the request.
+	// Se obtiene el contexto de la conexion y el tiempo de espera de esta
 	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
 	defer cancel()
 
-	// Return the result of the remote call.
-	return remoteNode.GetSuccessor(ctx, emptyRequest)
+	// Devuelve el resultado de la llamada remota.
+	res, err := remoteNode.GetSuccessor(ctx, &chord.GetSuccessorRequest{})
+	return res.GetSuccessor(), err
 }
 
-// SetPredecessor sets the predecessor of a remote node.
+// SetPredecessor establece el predecesor de un nodo remoto.
 func (services *GRPCServices) SetPredecessor(node, pred *chord.Node) error {
 	if node == nil {
-		return errors.New("Cannot establish connection with a null node.\n")
+		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
 	}
 
-	remoteNode, err := services.Connect(node.IP + ":" + node.Port) // Establish connection with the remote node.
+	// Establecida conexion con un nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
 	if err != nil {
 		return err
 	}
 
-	// Obtain the context of the connection and set the timeout of the request.
+	//Se obtiene el contexto de una conexion y el tiempo de espera de esta
 	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
 	defer cancel()
 
-	// Return the result of the remote call.
-	_, err = remoteNode.SetPredecessor(ctx, pred)
+	// Devuelve el resultado de la llamada remota.
+	req := &chord.SetPredecessorRequest{Predecessor: pred}
+	_, err = remoteNode.SetPredecessor(ctx, req)
 	return err
 }
 
-// SetSuccessor sets the successor of a remote node.
+// SetSuccessor establece el sucesor de un nodo remoto.
 func (services *GRPCServices) SetSuccessor(node, suc *chord.Node) error {
 	if node == nil {
-		return errors.New("Cannot establish connection with a null node.\n")
+		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
 	}
 
-	remoteNode, err := services.Connect(node.IP + ":" + node.Port) // Establish connection with the remote node.
+	// Establecida conexion con un nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
 	if err != nil {
 		return err
 	}
 
-	// Obtain the context of the connection and set the timeout of the request.
+	//Se obtiene el contexto de una conexion y el tiempo de espera de esta
 	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
 	defer cancel()
 
-	// Return the result of the remote call.
-	_, err = remoteNode.SetSuccessor(ctx, suc)
+	// Devuelve el resultado de la llamada remota.
+	req := &chord.SetSuccessorRequest{Successor: suc}
+	_, err = remoteNode.SetSuccessor(ctx, req)
 	return err
 }
 

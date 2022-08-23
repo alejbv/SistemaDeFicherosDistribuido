@@ -90,56 +90,61 @@ func (node *Node) GetPredecessor(ctx context.Context, req *chord.GetPredecessorR
 	return res, nil
 }
 
-// GetSuccessor returns the node believed to be the current successor.
-func (node *Node) GetSuccessor(ctx context.Context, req *chord.EmptyRequest) (*chord.Node, error) {
+// GetSuccessor regresa el nodo que se cree que es el sucesor actual del nodo.
+func (node *Node) GetSuccessor(ctx context.Context, req *chord.GetSuccessorRequest) (*chord.GetSuccessorResponse, error) {
 	log.Trace("Getting node successor.")
 
-	// Lock the successor to read it, and unlock it after.
+	// Bloquea el sucesor para leer de el, se desbloquea el terminar
 	node.sucLock.RLock()
 	suc := node.successors.Beg()
 	node.sucLock.RUnlock()
 
-	// Return the successor of this node.
-	return suc, nil
+	// Devuelve el sucesor de este nodo
+	res := &chord.GetSuccessorResponse{Successor: suc}
+	return res, nil
 }
 
-// SetPredecessor sets the predecessor of this node.
-func (node *Node) SetPredecessor(ctx context.Context, candidate *chord.Node) (*chord.EmptyResponse, error) {
-	log.Tracef("Setting node predecessor to %s.", candidate.IP)
+// SetPredecessor establece el predecesor de este nodo.
+func (node *Node) SetPredecessor(ctx context.Context, req *chord.SetPredecessorRequest) (*chord.SetPredecessorResponse, error) {
 
-	// If the new predecessor is not this node, update this node predecessor.
+	candidate := req.GetPredecessor()
+	log.Tracef("Estableciendo el nodo predecesor a %s.", candidate.IP)
+
+	// Si el nuevo predecesor no es este nodo, se actualiza el nuevo predecesor
 	if !Equals(candidate.ID, node.ID) {
-		// Lock the predecessor to read and write on it, and unlock it after.
+		// Bloquea el predecesor para lectura y escritura, se desbloquea el finalizar
 		node.predLock.Lock()
 		old := node.predecessor
 		node.predecessor = candidate
 		node.predLock.Unlock()
-		// If there was an old predecessor, absorb its keys.
+		// Si existia un anterior predecesor se absorven sus claves
 		go node.AbsorbPredecessorKeys(old)
 	} else {
-		log.Trace("Candidate predecessor is this same node. Update refused.")
+		log.Trace("El candidato a predecesor es el mismo nodo. No es necesario actualizar.")
 	}
 
-	return emptyResponse, nil
+	return &chord.SetPredecessorResponse{}, nil
 }
 
-// SetSuccessor sets the successor of this node.
-func (node *Node) SetSuccessor(ctx context.Context, candidate *chord.Node) (*chord.EmptyResponse, error) {
-	log.Tracef("Setting node successor to %s.", candidate.IP)
+// SetSuccessor establece el sucesor de este nodo.
+func (node *Node) SetSuccessor(ctx context.Context, req *chord.SetSuccessorRequest) (*chord.SetSuccessorResponse, error) {
 
-	// If the new successor is not this node, update this node successor.
+	candidate := req.GetSuccessor()
+	log.Tracef("Estableciendo el nodo sucesor a %s.", candidate.IP)
+
+	// Si el nuevo sucesor es distinto al actual nodo, se actualiza
 	if !Equals(candidate.ID, node.ID) {
-		// Lock the successor to write on it, and unlock it after.
+		//Bloquea el sucesor para escribir en el, se desbloquea al terminar
 		node.sucLock.Lock()
 		node.successors.PushBeg(candidate)
 		node.sucLock.Unlock()
-		// Update this new successor with this node keys.
+		// Actualiza este nuevo sucesor con las llaves de este nodo
 		go node.UpdateSuccessorKeys()
 	} else {
-		log.Trace("Candidate successor is this same node. Update refused.")
+		log.Trace("Candidato a sucesor es el mismo nodo. No hay necesidad de actualizar.")
 	}
 
-	return emptyResponse, nil
+	return &chord.SetSuccessorResponse{}, nil
 }
 
 // FindSuccessor busca el nodo sucesor de esta ID.
