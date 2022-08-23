@@ -8,20 +8,20 @@ import (
 	"google.golang.org/grpc"
 )
 
-// RemoteNode stores the properties of a connection with a remote chord node.
+// RemoteNode almacena las propiedades de una conexion con un nodo chord remoto.
 type RemoteNode struct {
-	chord.ChordClient // Chord client connected with the remote node server.
+	chord.ChordClient // Cliente Chord conectado con un servidor remoto.
 
-	addr       string           // Address of the remote node.
-	conn       *grpc.ClientConn // Grpc connection with the remote node server.
-	lastActive time.Time        // Last time the connection was used.
+	addr       string           // Direccion del nodo remoto.
+	conn       *grpc.ClientConn // conexion Grpc con el servidor remoto.
+	lastActive time.Time        // Ultima vez que la conexion fue usada.
 }
 
-// CloseConnection close the connection with a RemoteNode.
+// CloseConnection cierra  la conexion con un RemoteNode.
 func (connection *RemoteNode) CloseConnection() {
-	err := connection.conn.Close() // Close the connection with the remote node server.
+	err := connection.conn.Close() // Cierra la conexion con el nodo remoto.
 	if err != nil {
-		log.Error("Error closing connection with a remote node.\n" + err.Error() + "\n")
+		log.Error("Error cerrando la conexion con el nodo remoto.\n" + err.Error() + "\n")
 		return
 	}
 }

@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"bytes"
 	"hash"
 	"net"
 
@@ -48,4 +49,40 @@ func HashKey(key string, hash func() hash.Hash) ([]byte, error) {
 	value := h.Sum(nil)
 
 	return value, nil
+}
+
+// Equals comprueba si 2 IDs son iguales
+func Equals(ID1, ID2 []byte) bool {
+	return bytes.Compare(ID1, ID2) == 0
+}
+
+func Keys[T any](dictionary map[string]T) []string {
+	keys := make([]string, 0)
+
+	for key := range dictionary {
+		keys = append(keys, key)
+	}
+
+	return keys
+}
+
+func KeyBetween(key string, hash func() hash.Hash, L, R []byte) (bool, error) {
+	ID, err := HashKey(key, hash) // Obtiene la ID correspondiente a la clave.
+	if err != nil {
+		return false, err
+	}
+
+	return Equals(ID, R) || Between(ID, L, R), nil
+}
+
+// Between comprueba si una ID esta dentro del intervalo (L,R),en el anillo chord.
+func Between(ID, L, R []byte) bool {
+	// Si L <= R, devuelve true si L < ID < R.
+	if bytes.Compare(L, R) <= 0 {
+		return bytes.Compare(L, ID) < 0 && bytes.Compare(ID, R) < 0
+	}
+
+	// Si L > R, es un segmento sobre el final del anillo.
+	// Entonces, ID esta entre L y R si L < ID o ID < R.
+	return bytes.Compare(L, ID) < 0 || bytes.Compare(ID, R) < 0
 }
