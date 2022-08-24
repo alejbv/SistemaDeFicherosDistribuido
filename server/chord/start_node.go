@@ -215,7 +215,7 @@ func (node *Node) Join(knownNode *chord.Node) error {
 }
 
 func (node *Node) FindIDSuccessor(id []byte) (*chord.Node, error) {
-	log.Trace("Buscanod el sucesor de ID .")
+	log.Trace("Buscando el sucesor de ID .")
 
 	// Si la ID es nula reporta un error.
 	if id == nil {
@@ -245,6 +245,33 @@ func (node *Node) FindIDSuccessor(id []byte) (*chord.Node, error) {
 	}
 	// Devolver el sucesor obtenido.
 	log.Trace("Encontrado el sucesor de la ID.")
+	return suc, nil
+}
+
+/*
+LocateKey localiza el nodo correspondiente a una llave determinada.
+Para eso, el obtiene el hash de la llave para obtener el correspondiente ID, entonces busca por
+el sucesor más cercano a esta ID en el anillo. dado que este es el nodo al que le corresponde la llave
+*/
+
+func (node *Node) LocateKey(key string) (*chord.Node, error) {
+	log.Tracef("Localizando la llave: %s.", key)
+
+	// Obteniendo el ID relativo a esta llave
+	id, err := HashKey(key, node.config.Hash)
+	if err != nil {
+		log.Errorf("Error localizando la llave: %s.", key)
+		return nil, errors.New(fmt.Sprintf("error localizando la llave: %s.\n%s", key, err.Error()))
+	}
+
+	// Busca y obtiene el sucesor de esta ID
+	suc, err := node.FindIDSuccessor(id)
+	if err != nil {
+		log.Errorf("Error localizando el sucesor de esta ID: %s.", key)
+		return nil, errors.New(fmt.Sprintf("error localizando el sucesor de esta ID: %s.\n%s", key, err.Error()))
+	}
+
+	log.Trace("Localizacion de la llave exitosa.")
 	return suc, nil
 }
 

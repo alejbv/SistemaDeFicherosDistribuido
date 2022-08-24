@@ -16,42 +16,42 @@ type RemoteServices interface {
 	Start() error // Empieza el servicio.
 	Stop() error  // Para el servicio.
 
-	// GetPredecessor returns the node believed to be the current predecessor of a remote node.
+	// GetPredecessor devuelve el nodo que se cree que es el actual predecesor de un nodo remoto.
 	GetPredecessor(*chord.Node) (*chord.Node, error)
-	// GetSuccessor returns the node believed to be the current successor of a remote node.
+	// GetSuccessor r devuelve el nodo que se cree que es el actual sucesor de un nodo remoto.
 	GetSuccessor(*chord.Node) (*chord.Node, error)
-	// SetPredecessor sets the predecessor of a remote node.
+	// SetPredecessor establece el predecesor de un nodo remoto.
 	SetPredecessor(*chord.Node, *chord.Node) error
-	// SetSuccessor sets the successor of a remote node.
+	// SetSuccessor sestablece el sucesor de un nodo remoto.
 	SetSuccessor(*chord.Node, *chord.Node) error
 	// FindSuccessor encuentra el nodo que sucede a la ID, partiendo desde un nodo remoto.
 	FindSuccessor(*chord.Node, []byte) (*chord.Node, error)
-	// Notify a remote node that it possibly have a new predecessor.
+	// Notify notifica a un nodo remoto de que es posible tenga un nuevo predecesor.
 	Notify(*chord.Node, *chord.Node) error
 	// Check Comprueba si un nodo remoto esta vivo.
 	Check(*chord.Node) error
 
-	// Get the value associated to a key on a remote node storage.
+	// Get recupera el valor asociado  a una llave en el almacenamiento de un nodo remoto.
 	Get(node *chord.Node, req *chord.GetRequest) (*chord.GetResponse, error)
-	// Set a <key, value> pair on a remote node storage.
+	// Set establece un par  <key, value> en el almacenamiento de un nodo remoto.
 	Set(node *chord.Node, req *chord.SetRequest) error
-	// Delete a <key, value> pair from a remote node storage.
+	// Delete elimina un par <key, value> de el almacenamiento de un nodo remoto.
 	Delete(node *chord.Node, req *chord.DeleteRequest) error
-	// Extend the storage dictionary of a remote node with a list of <key, values> pairs.
+	// Extend  exitiende el diccionario de almacenamiento de un nodo remoto con una lista de pares <key, values>.
 	Extend(node *chord.Node, req *chord.ExtendRequest) error
-	// Partition return all <key, values> pairs in a given interval from the storage of a remote node.
+	// Partition  devuelve todos los pares <key, values> en un intervalo dado, del almacenamiento de un nodo remoto
 	Partition(node *chord.Node, req *chord.PartitionRequest) (*chord.PartitionResponse, error)
-	// Discard all <key, values> pairs in a given interval from the storage of a remote node.
+	// Discard descarta todos los pares <key, values> en un intervalo del almacenamiento de un nodo remoto.
 	Discard(node *chord.Node, req *chord.DiscardRequest) error
 }
 
 type GRPCServices struct {
-	*Configuration // Remote service configurations.
+	*Configuration // Configuraciones de un nodo remoto.
 
-	connections    map[string]*RemoteNode // Dictionary of <address, open connection>.
-	connectionsMtx sync.RWMutex           // Locks the dictionary for reading or writing.
+	connections    map[string]*RemoteNode // Diccionario de <address, open connection>.
+	connectionsMtx sync.RWMutex           // Bloquea el diccionario para lectura o escritura.
 
-	shutdown chan struct{} // Determine if the service is actually running.
+	shutdown chan struct{} // Determina si el servicio esta actualmente en ejecucion
 }
 
 // NewGRPCServices crea un nuevo objeto tipo GRPCServices .
@@ -86,42 +86,6 @@ func (services *GRPCServices) Start() error {
 
 	log.Info("Servicios de la capa de tranporte en funcionamiento\n")
 	return nil
-}
-
-// CloseOldConnections cierra las viejas conexiones abiertas.
-func (services *GRPCServices) CloseOldConnections() {
-	log.Trace("Cerrando viejas conexiones.\n")
-
-	// Si el servicio esta apagado , cierra todas las conexiones  y regresa.
-	if !IsOpen(services.shutdown) {
-		services.connectionsMtx.Lock() // Bloquea el diccionario para que no se escriba en el,Se desbloquea despues.
-		// Para  cerrar las conexiones con los nodos en el diccionario.
-		for _, remoteNode := range services.connections {
-			remoteNode.CloseConnection()
-		}
-		services.connections = nil // Borra el diccionario de conexiones.
-		services.connectionsMtx.Unlock()
-		return
-	}
-
-	services.connectionsMtx.RLock() // Bloquea el diccionario para lectura en el,Se desbloquea despues.
-	if services.connections == nil {
-		services.connectionsMtx.Unlock()
-		log.Error("Error cerrando conexiones: la tabla de conexiones esta vacia.\n")
-		return
-	}
-	services.connectionsMtx.RUnlock()
-
-	services.connectionsMtx.Lock()
-
-	for addr, remoteNode := range services.connections {
-		if time.Since(remoteNode.lastActive) > services.MaxIdle {
-			remoteNode.CloseConnection()
-			delete(services.connections, addr) // Elimina los pares <address, open connection> en el diccionario.
-		}
-	}
-	services.connectionsMtx.Unlock()
-	log.Trace("Viejas conexiones cerradas.\n")
 }
 
 /*
@@ -190,6 +154,56 @@ func (services *GRPCServices) Connect(addr string) (*RemoteNode, error) {
 
 	log.Trace("Conexion exitosa.\n")
 	return remoteNode, nil
+}
+
+// CloseOldConnections cierra las viejas conexiones abiertas.
+func (services *GRPCServices) CloseOldConnections() {
+	log.Trace("Cerrando viejas conexiones.\n")
+
+	// Si el servicio esta apagado , cierra todas las conexiones  y regresa.
+	if !IsOpen(services.shutdown) {
+		services.connectionsMtx.Lock() // Bloquea el diccionario para que no se escriba en el,Se desbloquea despues.
+		// Para  cerrar las conexiones con los nodos en el diccionario.
+		for _, remoteNode := range services.connections {
+			remoteNode.CloseConnection()
+		}
+		services.connections = nil // Borra el diccionario de conexiones.
+		services.connectionsMtx.Unlock()
+		return
+	}
+
+	services.connectionsMtx.RLock() // Bloquea el diccionario para lectura en el,Se desbloquea despues.
+	if services.connections == nil {
+		services.connectionsMtx.Unlock()
+		log.Error("Error cerrando conexiones: la tabla de conexiones esta vacia.\n")
+		return
+	}
+	services.connectionsMtx.RUnlock()
+
+	services.connectionsMtx.Lock()
+
+	for addr, remoteNode := range services.connections {
+		if time.Since(remoteNode.lastActive) > services.MaxIdle {
+			remoteNode.CloseConnection()
+			delete(services.connections, addr) // Elimina los pares <address, open connection> en el diccionario.
+		}
+	}
+	services.connectionsMtx.Unlock()
+	log.Trace("Viejas conexiones cerradas.\n")
+}
+
+// PeriodicallyCloseConnections periodicamente cierra las viejas conexiones.
+func (services *GRPCServices) PeriodicallyCloseConnections() {
+	ticker := time.NewTicker(60 * time.Second) // Establece el tiempo de reactivacion de las rutinas.
+	for {
+		select {
+		case <-ticker.C:
+			services.CloseOldConnections() // Si se cumple el tiempo, cierra todas las conexiones viejas.
+		case <-services.shutdown:
+			services.CloseOldConnections() // Si er servicio está caído, cierra todas las conexions y cierra el hilo.
+			return
+		}
+	}
 }
 
 // GetPredecessor devuelve el nodo que se cree que es el actual predecesor de un nodo remoto.
@@ -344,6 +358,87 @@ func (services *GRPCServices) Check(node *chord.Node) error {
 	// Devuelve el resultado de la llamada remota.
 	_, err = remoteNode.Check(ctx, &chord.CheckRequest{})
 	return err
+}
+
+// Get devuelve el valor asociado a una llave en el almacenamiento de un nodo remoto.
+func (services *GRPCServices) Get(node *chord.Node, req *chord.GetRequest) (*chord.GetResponse, error) {
+	if node == nil {
+		return nil, errors.New("No se puede establecer conexion con un nodo vacio.\n")
+	}
+	// Estableciendo conexion con un nodo remoto.
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Devuelve el resultado de la llamada remota.
+	return remoteNode.Get(ctx, req)
+}
+
+// Set almacena un par  <key, value> en el almacenamiento de un nodo remoto.
+func (services *GRPCServices) Set(node *chord.Node, req *chord.SetRequest) error {
+	if node == nil {
+		return errors.New("No se puede establecer una conexion con un nodo vacio.\n")
+	}
+
+	// Estableciendo conexion con un nodo remoto.
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Devuelve el resultado de la llamada remota.
+	_, err = remoteNode.Set(ctx, req)
+	return err
+}
+
+// Delete elimina un par <key, value> del almacenamiento de un nodo remoto.
+func (services *GRPCServices) Delete(node *chord.Node, req *chord.DeleteRequest) error {
+	if node == nil {
+		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
+	}
+
+	// Estableciendo conexion con un nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Se devuelve el resultado de la llamada remota
+	_, err = remoteNode.Delete(ctx, req)
+	return err
+}
+
+// Partition devuelve todos los pares <key, values>  en un intervalo dado del almacenamiento de un nodo remoto.
+func (services *GRPCServices) Partition(node *chord.Node, req *chord.PartitionRequest) (*chord.PartitionResponse, error) {
+	if node == nil {
+		return nil, errors.New("No se puede establecer conexion con un nodo vacio.\n")
+	}
+
+	// Establece la conexion con el nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de duracion de la request
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Devuelve el resultado de la llamada remota.
+	return remoteNode.Partition(ctx, &chord.PartitionRequest{})
 }
 
 // Extend agrega una lista de pares  <key, values> en el diccionario de almacenamiento de un  odo remoto.
