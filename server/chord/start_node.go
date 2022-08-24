@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -92,7 +93,7 @@ func (node *Node) Start() error {
 		log.Info("Creando el anillo del chord.")
 	}
 
-	// Start periodically threads.
+	// Se empiezan los hilos de ejecucion periodica.
 	go node.PeriodicallyCheckPredecessor()
 	go node.PeriodicallyCheckSuccessor()
 	go node.PeriodicallyStabilize()
@@ -105,67 +106,104 @@ func (node *Node) Start() error {
 	return nil
 }
 
-// NetDiscover trata de encontrar si existe en la red algun otro anillo chord.
-func (node *Node) NetDiscover(ip net.IP) (string, error) {
-	// La dirección de broadcast.
-	ip[3] = 255
-	broadcast := ip.String() + ":8830"
+/*
+ Para el nodo servidor al parar el servicio de la capa de transporte (la parte cliente del chord) y reportando
+ al nodo que los servicios están apagados. Para hacer que los hilos se paren eventualmente.
+ Entonces, conecta el sucesor de este nodo y su predecesor directamente, antes de dejar el anillo
+*/
+func (node *Node) Stop() error {
+	log.Info("Cerrando el servidor...")
 
-	// Tratando de escuchar al puerto en uso.
-	pc, err := net.ListenPacket("udp4", ":8830")
-	if err != nil {
-		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
-		return "", err
+	// Si el nodo servidor actualmente no está en ejecucion, reporta un error.
+	if !IsOpen(node.shutdown) {
+		log.Error("Error parando el servidor: este nodo servidor ya está caido.")
+		return errors.New("errorparando el servidor: este nodo servidor ya está caido.")
 	}
 
-	//Resuelve la dirección a la que se va a hacer broadcast.
-	out, err := net.ResolveUDPAddr("udp4", broadcast)
-	if err != nil {
-		log.Errorf("Error resolviendo la direccion de broadcast %s.", broadcast)
-		return "", err
-	}
+	//Bloquea el sucesor para leer de el, se desbloquea al terminar
+	node.sucLock.RLock()
+	suc := node.successors.Beg()
+	node.sucLock.RUnlock()
 
-	log.Info("Resuelta direccion UPD broadcast.")
+	// Bloquea el predecesor para leer de el, se desbloquea al terminar
+	node.predLock.RLock()
+	pred := node.predecessor
+	node.predLock.RUnlock()
 
-	// Enviando el mensaje
-	_, err = pc.WriteTo([]byte("Chord?"), out)
-	if err != nil {
-		log.Errorf("Error enviando el mensaje de broadcast a la dirección%s.", broadcast)
-		return "", err
-	}
-
-	log.Info("Terminado el mensaje broadcast.")
-	top := time.Now().Add(10 * time.Second)
-
-	log.Info("Esperando por respuesta.")
-
-	for top.After(time.Now()) {
-		// Creando el buffer para almacenar el mensaje.
-		buf := make([]byte, 1024)
-
-		// Estableciendo el tiempo de espera para mensajes entrantes.
-		err = pc.SetReadDeadline(time.Now().Add(2 * time.Second))
+	// Si el nodo es distinto a su predecesor y a su sucesor.
+	if !Equals(node.ID, suc.ID) && !Equals(node.ID, pred.ID) {
+		// Cambia el predecesor del nodo sucesor del actual nodo a su predecesor.
+		err := node.RPC.SetPredecessor(suc, pred)
 		if err != nil {
-			log.Error("Error establecientdo eltiempo de espera para mensajes entrantes.")
-			return "", err
+			log.Errorf("Error parando el servidor: error estableciendo el nuevo predecesor del sucesor en  %s.", suc.IP)
+			return errors.New(
+				fmt.Sprintf("error parando el servidor: error estableciendo el nuevo predecesor del sucesor en  %s\n.%s",
+					suc.IP, err.Error()))
 		}
 
-		// Esperando por un mensaje.
-		n, address, err := pc.ReadFrom(buf)
+		// Cambia el sucesor del predecesor de este nodo a su sucesor.
+		err = node.RPC.SetSuccessor(pred, suc)
 		if err != nil {
-			log.Errorf("Error leyendo el mensaje entrante.\n%s", err.Error())
-			continue
-		}
-
-		log.Debugf("Mensaje de respuesta entrante. %s enviado a: %s", address, buf[:n])
-
-		if string(buf[:n]) == "Yo soy chord" {
-			return strings.Split(address.String(), ":")[0], nil
+			log.Errorf("Error parando el servidor: error estableciendo el nuevo sucesor del predecesor en %s.", pred.IP)
+			return errors.New(
+				fmt.Sprintf("error parando el servidor: error estableciendo el nuevo sucesor del predecesor en %s\n.%s",
+					pred.IP, err.Error()))
 		}
 	}
 
-	log.Info("Tiempo de espera por respuesta pasado.")
-	return "", nil
+	err := node.RPC.Stop() // Para los servicios de RPC (capa de transporte)
+	if err != nil {
+		log.Error("Error parando el servidor: no se puede parar la capa de transporte.")
+		return errors.New("error parando el servidor: no se puede parar la capa de transporte\n" + err.Error())
+	}
+
+	node.server.Stop() // Para el nodo servidor.
+
+	close(node.shutdown) // Reporta que el nodo servidor está cada
+	log.Info("Servidor cerrado.")
+	return nil
+}
+
+// GetKey recupera el valor asociado con una llave.
+func (node *Node) GetKey(key string, lock bool) ([]byte, error) {
+	//Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
+	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
+	defer cancel()
+
+	log.Info("Resolviendo la request Get.")
+
+	response, err := node.Get(ctx, &chord.GetRequest{Key: key, Lock: lock, IP: node.IP})
+	if err != nil {
+		return nil, err
+	}
+
+	return response.Value, nil
+}
+
+// SetKey establece un par <key, value> en el almacenamiento.
+func (node *Node) SetKey(key string, value []byte, lock bool) error {
+	// Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
+	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
+	defer cancel()
+
+	log.Info("Resolviendo la request Set.")
+
+	_, err := node.Set(ctx, &chord.SetRequest{Key: key, Value: value, Lock: lock, IP: node.IP})
+
+	return err
+}
+
+// DeleteKey elimina un par  <key, value> del almacenamiento.
+func (node *Node) DeleteKey(key string, lock bool) error {
+	// Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
+	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
+	defer cancel()
+
+	log.Info("Resolviendo la request Delete.")
+
+	_, err := node.Delete(ctx, &chord.DeleteRequest{Key: key, Lock: lock, IP: node.IP})
+
+	return err
 }
 
 func (node *Node) Listen() {
@@ -253,7 +291,6 @@ LocateKey localiza el nodo correspondiente a una llave determinada.
 Para eso, el obtiene el hash de la llave para obtener el correspondiente ID, entonces busca por
 el sucesor más cercano a esta ID en el anillo. dado que este es el nodo al que le corresponde la llave
 */
-
 func (node *Node) LocateKey(key string) (*chord.Node, error) {
 	log.Tracef("Localizando la llave: %s.", key)
 
@@ -485,4 +522,111 @@ func (node *Node) UpdateSuccessorKeys() {
 		}
 		log.Trace("Transferencia de llaves al sucesor exitosa.")
 	}
+}
+
+// BroadListen espera por mensajes de broadcast.
+func (node *Node) BroadListen() {
+	// Espera para que el puerto especifico este libre de uso.
+	pc, err := net.ListenPacket("udp4", ":8830")
+	for err != nil {
+		pc, err = net.ListenPacket("udp4", ":8830")
+	}
+	// Cierra el socket al final de la funcion.
+	defer func(pc net.PacketConn) {
+		err := pc.Close()
+		if err != nil {
+			return
+		}
+	}(pc)
+
+	// Empieza a escuchar mensajes
+	for {
+		// Si el nodo servidor está caido, regresa
+		if !IsOpen(node.shutdown) {
+			return
+		}
+
+		// Crea el buffer para almacenar el mensaje
+		buf := make([]byte, 1024)
+		// Espera por el mensaje
+		n, address, err := pc.ReadFrom(buf)
+		if err != nil {
+			log.Errorf("Error de mensaje de broadcast entrante.\n%s", err.Error())
+			continue
+		}
+
+		log.Debugf("Respuesta al mensaje entrante. %s enviar esto: %s", address, buf[:n])
+
+		// Si el mensaje entrante es el especifico, se le responde con la respuesta en especifico.
+		if string(buf[:n]) == "Chord?" {
+			_, err = pc.WriteTo([]byte("Yo soy chord"), address)
+			if err != nil {
+				log.Errorf("Error respondiendo al mensaje de broadcast.\n%s", err.Error())
+				continue
+			}
+		}
+	}
+}
+
+// NetDiscover trata de encontrar si existe en la red algun otro anillo chord.
+func (node *Node) NetDiscover(ip net.IP) (string, error) {
+	// La dirección de broadcast.
+	ip[3] = 255
+	broadcast := ip.String() + ":8830"
+
+	// Tratando de escuchar al puerto en uso.
+	pc, err := net.ListenPacket("udp4", ":8830")
+	if err != nil {
+		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
+		return "", err
+	}
+
+	//Resuelve la dirección a la que se va a hacer broadcast.
+	out, err := net.ResolveUDPAddr("udp4", broadcast)
+	if err != nil {
+		log.Errorf("Error resolviendo la direccion de broadcast %s.", broadcast)
+		return "", err
+	}
+
+	log.Info("Resuelta direccion UPD broadcast.")
+
+	// Enviando el mensaje
+	_, err = pc.WriteTo([]byte("Chord?"), out)
+	if err != nil {
+		log.Errorf("Error enviando el mensaje de broadcast a la dirección%s.", broadcast)
+		return "", err
+	}
+
+	log.Info("Terminado el mensaje broadcast.")
+	top := time.Now().Add(10 * time.Second)
+
+	log.Info("Esperando por respuesta.")
+
+	for top.After(time.Now()) {
+		// Creando el buffer para almacenar el mensaje.
+		buf := make([]byte, 1024)
+
+		// Estableciendo el tiempo de espera para mensajes entrantes.
+		err = pc.SetReadDeadline(time.Now().Add(2 * time.Second))
+		if err != nil {
+			log.Error("Error establecientdo el tiempo de espera para mensajes entrantes.")
+			return "", err
+		}
+
+		// Esperando por un mensaje.
+		n, address, err := pc.ReadFrom(buf)
+		if err != nil {
+			log.Errorf("Error leyendo el mensaje entrante.\n%s", err.Error())
+			continue
+		}
+
+		log.Debugf("Mensaje de respuesta entrante. %s enviado a: %s", address, buf[:n])
+
+		if string(buf[:n]) == "Yo soy chord" {
+			return strings.Split(address.String(), ":")[0], nil
+		}
+	}
+
+	log.Info("Tiempo de espera por respuesta pasado.")
+	return "", nil
 }
