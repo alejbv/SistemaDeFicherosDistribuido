@@ -7,7 +7,7 @@ import (
 	log "github.com/sirupsen/logrus"
 )
 
-// Node server periodically threads.
+// Los hilos de ejecucion periodicos del nodo servidor.
 
 /*
 Estabiliza el nodo, Para esto el predecesor del sucesor es buscado.
@@ -32,16 +32,15 @@ func (node *Node) Stabilize() {
 
 	candidate, err := node.RPC.GetPredecessor(suc) // En otro caso obten el predecesor de este nodo.
 	if err != nil {
-		log.Errorf("Error estabilizando el nodo. No se puede obtener el predecesor del sucesor en %s.\n%s", suc.IP, err.Error())
+		log.Errorf("Error estabilizando el nodo: no se puede obtener el predecesor del sucesor en %s.\n%s", suc.IP, err.Error())
 		return
 	}
-
 	/*
 		Si el nodo candidato es mas cercano a este nodo que su actual sucesor, se actualiza el
 		sucesor de este nodo con el candidato
 	*/
 	if Equals(node.ID, suc.ID) || Between(candidate.ID, node.ID, suc.ID) {
-		log.Debug("Successor updated to node at " + candidate.IP + ".")
+		log.Debug("Sucesor actualizado al nodo en " + candidate.IP + ".")
 		// Bloquea el sucesor para escribir en el, se desbloquea el finalizar
 		node.sucLock.Lock()
 		node.successors.PushBeg(candidate) //Se actualiza el sucesor de este nodo con el obtenido.
@@ -52,11 +51,11 @@ func (node *Node) Stabilize() {
 	// Notifica al sucesor de la existencia de su predecesor.
 	err = node.RPC.Notify(suc, node.Node)
 	if err != nil {
-		log.Errorf("Error notifying successor at %s.\n%s", suc.IP, err.Error())
+		log.Errorf("Error notificando al sucesor en %s.\n%s", suc.IP, err.Error())
 		return
 	}
 
-	log.Trace("Node stabilized.")
+	log.Trace("Nodo estabilizado.")
 }
 
 // PeriodicallyStabilize periodicamente estabiliza el nodo.
@@ -207,240 +206,287 @@ func (node *Node) PeriodicallyCheckSuccessor() {
 	}
 }
 
-// FixFinger update a particular finger on the finger table, and return the index of the next finger to update.
+// FixFinger actualiza una parte en particular de la FingerTable, y devuelve el index de la otro posicion a actualizar .
 func (node *Node) FixFinger(index int) int {
-	log.Trace("Fixing finger entry.")
-	defer log.Trace("Finger entry fixed.")
+	log.Trace("Arreglando entrada.")
+	defer log.Trace("Entrada arreglada.")
 
-	m := node.config.HashSize            // Obtain the finger table size.
-	ID := FingerID(node.ID, index, m)    // Obtain node.ID + 2^(next) mod(2^m).
-	suc, err := node.FindIDSuccessor(ID) // Obtain the node that succeeds ID = node.ID + 2^(next) mod(2^m).
-	// In case of error finding the successor, report the error and skip this finger.
+	// Obtiene el tamaño de la FingerTable
+	m := node.config.HashSize
+	// Obtiene  node.ID + 2^(next) mod(2^m).
+	ID := FingerID(node.ID, index, m)
+	// Obtiene el nodo que  sucede a  ID = node.ID + 2^(next) mod(2^m).
+	suc, err := node.FindIDSuccessor(ID)
+	// En caso de error buscando el sucesor, reporta el error y se salta esta parte.
 	if err != nil || suc == nil {
-		log.Errorf("Successor of ID not found.This finger fix was skipped.\n%s", err.Error())
-		// Return the next index to fix.
+		log.Errorf("Sucesor de la ID no encontrado: el arreglo de esta parte fue saltado.\n%s", err.Error())
+		//Devuelve el siguiente indice a arreglar.
 		return (index + 1) % m
 	}
 
-	log.Tracef("Correspondent finger found at %s.", suc.IP)
+	log.Tracef("Parte correspondiente encontrada en  %s.", suc.IP)
 
-	// If the successor of this ID is this node, then the ring has already been turned around.
-	// Clean the remaining positions and return index 0 to restart the fixing cycle.
+	// Si el sucesor de ID es este nodo, entonces el anillo esta listo.
+	// Limpia las posiciones restantes y devuelve el indice 0 para reiniciar el ciclo arreglado.
 	if Equals(suc.ID, node.ID) {
 		for i := index; i < m; i++ {
-			node.fingerLock.Lock()    // Lock finger table to write on it, and unlock it after.
-			node.fingerTable[i] = nil // Clean the correspondent position on the finger table.
+			// Bloquea la FingerTable para escribir en ella, la desbloquea al terminar
+			node.fingerLock.Lock()
+			// CLimpia las posiciones correspondientes en la FingerTable
+			node.fingerTable[i] = nil
 			node.fingerLock.Unlock()
 		}
 		return 0
 	}
 
-	node.fingerLock.Lock()        // Lock finger table to write on it, and unlock it after.
-	node.fingerTable[index] = suc // Update the correspondent position on the finger table.
+	// Bloquea la FingerTable para escribir en ella, la desbloquea al terminar
+	node.fingerLock.Lock()
+	// Actualiza la posicion correspondiente en la FingerTable
+	node.fingerTable[index] = suc
 	node.fingerLock.Unlock()
 
-	// Return the next index to fix.
+	// Devuelve el proximo indice a arreglar
 	return (index + 1) % m
 }
 
-// PeriodicallyFixFinger periodically fix finger table.
+// PeriodicallyFixFinger Periodicamente arregla la FingerTable.
 func (node *Node) PeriodicallyFixFinger() {
-	log.Debug("Fix finger thread started.")
+	log.Debug("Hilo para arreglar la FingerTable empezado.")
 
-	next := 0                                        // Index of the actual finger entry to fix.
-	ticker := time.NewTicker(100 * time.Millisecond) // Set the time between routine activations.
+	// Posicion de la actual posicion de la FingerTable a arreglar
+	next := 0
+	// Establece el tiempo entre la activacion de las rutinas
+	ticker := time.NewTicker(100 * time.Millisecond)
 	for {
 		select {
-		case <-node.shutdown: // If node server is shutdown, stop the thread.
+		// Si el servidor esta caido termina el hilo
+		case <-node.shutdown:
 			ticker.Stop()
 			return
-		case <-ticker.C: // If it's time, fix the correspondent finger table entry.
+		case <-ticker.C:
+			// Si es tiempo arregla la posicion correspondiente en la FingerTable
 			next = node.FixFinger(next)
 		}
 	}
 }
 
-// FixSuccessor fix an entry of the queue of successors.
-// Given an entry of the successor queue, gets the reference to a remote node it contains and
-// makes a remote call to GetSuccessor to get its successor.
-// If the call fails, assume the remote node is dead, and remove this entry from the queue of successors.
-// In this case, return the previous entry of this one, to fix this entry later.
-// Otherwise, fix the next entry, updating its value with the obtained successor,
-// and return the next entry of the queue.
-func (node *Node) FixSuccessor(entry *QueueNode[chord.Node]) *QueueNode[chord.Node] {
-	log.Trace("Fixing successor queue entry.")
+/*
+FixSuccessor arregla una entrada de la cola de los predecesores.
+Dado una entrada de la cola de sucesores, obtiene las referencias a los nodos remotos
+que contiene y hace una llamada remota a GetSuccessor para obtener sus sucesores.
+Si la llamada falla, asume que el nodo remoto esta caido y remueve dicha entrada de la cola.
+En otro caso arregla la siguiente entrada actualizando su valor con el sucesor obtenido
 
-	// If the queue node is null, report error.
+*/
+func (node *Node) FixSuccessor(entry *QueueNode[chord.Node]) *QueueNode[chord.Node] {
+	log.Trace("Arreglando la cola de sucesores introducida.")
+
+	// Si es vacia devuelve error.
 	if entry == nil {
-		log.Error("Error fixing successor queue entry: queue node argument cannot be null.")
+		log.Error("Error arreglando la cola de sucesores introducida: no puede ser vacia.")
 		return nil
 	}
 
-	node.sucLock.RLock()                     // Lock the queue to read it, and unlock it after.
-	value := entry.value                     // Obtain the successor contained in this queue node.
-	prev := entry.prev                       // Obtain the previous node of this queue node.
-	next := entry.next                       // Obtain the next node of this queue node.
-	inside := entry.inside                   // Check if this queue node still being inside the queue.
-	fulfilled := node.successors.Fulfilled() // Check if the queue is fulfilled.
+	// Bloquea  la cola para leer de ella, la desbloquea al terminar
+	node.sucLock.RLock()
+	// Obtiene el sucesor obtenido en la cola
+	value := entry.value
+	// Obtiene el nodo previo al de la entrada
+	prev := entry.prev
+	// Obtiene el nodo siguiente en la cola
+	next := entry.next
+	inside := entry.inside
+	fulfilled := node.successors.Fulfilled()
 	node.sucLock.RUnlock()
 
-	// If the queue node is not inside the queue, return the next node.
-	// If this queue node is the last one, and the queue is fulfilled, return null to restart the fixing cycle.
+	/*
+		Si el nodo no esta dentro de la cola, devuelve el nodo siguiente.
+		Si es el ultimo y la cola esta completa devuelve un null para arreglar el ciclo
+	*/
 	if !inside || next == nil && fulfilled {
-		log.Trace("Successor queue entry fixed.")
+		log.Trace("Cola de sucesores arreglada.")
 		return next
 	}
 
-	suc, err := node.RPC.GetSuccessor(value) // Otherwise, get the successor of this successor.
-	// If there is an error, then assume this successor is dead.
+	// En otro caso se obtiene el sucesor de este nodo
+	suc, err := node.RPC.GetSuccessor(value)
+	// Si hay un error se asume que el nodo esta muerto
 	if err != nil {
-		// If this successor is the immediate successor of this node, don't report the error,
-		// to wait for CheckSuccessor to detect it and pop this node from the queue
-		// (it's necessary for the correct transfer of keys).
+		/*
+			SI este sucesor es el sucesor inmediato del nodo, no se reporta el error,
+			para esperar por  CheckSuccessor a que lo detecte y removerlo de la cola
+		*/
 		if prev == nil {
-			// In this case, return the next node of this queue node, to skip this one and fix the remaining.
+			// En este caso , devuevle el siguiente nodo en esta cola..
 			return next
 		} else {
-			// Otherwise, report the error and remove the node from the queue of successors.
-			log.Errorf("Error getting successor of successor at %s."+
-				"Therefore is assumed dead and removed from the queue of successors.\n%s", value.IP, err.Error())
+			// En otro caso reporta en error y remuve el nodo de la cola
+			log.Errorf("Error consiguiendo el sucesor del sucesor en  %s."+
+				"Por lo tanto se asume que esta muerto y se remueve de la cola.\n%s", value.IP, err.Error())
 
-			node.sucLock.Lock()           // Lock the queue to write on it, and unlock it after.
-			node.successors.Remove(entry) // Remove it from the queue of successors.
-			// Push back this node, to ensure the queue is not empty.
-			// Push back this node, to ensure the queue is not empty.
+			// Bloquea la cola para escribir en ella, desbloqueala al finalizar
+			node.sucLock.Lock()
+			//Se remueve de la cola.
+			node.successors.Remove(entry)
+			// Se agrega el propio nodo para asegurar que la cola no este vacia.
 			if node.successors.Empty() {
 				node.successors.PushBack(node.Node)
 			}
 			node.sucLock.Unlock()
 
-			// In this case, return the previous node of this queue node, to fix this entry later.
+			// En este caso, se devuelve el nodo previo al de entrada, para arreglarlo despues.
 			return prev
 		}
 	}
 
-	node.sucLock.RLock()  // Lock the queue to read it, and unlock it after.
-	next = entry.next     // Obtain the next node of this queue node.
-	inside = entry.inside // Check if this queue node still being inside the queue.
+	// Bloquea la cola para leer de ella, se desbloquea el finalizar
+	node.sucLock.RLock()
+	// Obtiene el nodo siguiente de la cola
+	next = entry.next
+	// Comprueba si este nodo sigue dentro de la cola
+	inside = entry.inside
 	node.sucLock.RUnlock()
 
-	// If the obtained successor is not this node, and is not the same node of this entry.
+	// Si el sucesor obtenido no es este nodo, y no es el mismo que el de entrada.
 	if !Equals(suc.ID, node.ID) && !Equals(suc.ID, value.ID) {
-		// If this queue node still on the queue.
+		// Si esta todavia dentro de la cola
 		if inside {
-			// If this queue node is the last one, push its successor at the end of queue.
+			// Si es el ultimo nodo se agregan sus sucesores al final de la cola.
 			if next == nil {
-				node.sucLock.Lock()           // Lock the queue to write on it, and unlock it after.
-				node.successors.PushBack(suc) // Push this successor in the queue.
+				// Bloquea la cola para escribir en ella, se desbloquea al final
+				node.sucLock.Lock()
+				// Agrega al final de la cola este sucesor
+				node.successors.PushBack(suc)
 				node.sucLock.Unlock()
 			} else {
-				// Otherwise, fix next node of this queue node.
-				node.sucLock.Lock() // Lock the queue to write on it, and unlock it after.
-				next.value = suc    // Set this successor as value of the next node of this queue node.
+				// En otro caso arregla el siguiente nodo de la cola.
+				// Bloquea la cola para escribir en ella, se desbloquea al final
+				node.sucLock.Lock()
+				// Establece el  sucesor como el siguiente nodo de la cola
+				next.value = suc
 				node.sucLock.Unlock()
 			}
 		} else {
-			// Otherwise, skip this node and continue with the next one.
+			// En otro caso, se salta este nodo y sigue con el siguiente
 			return next
 		}
 	} else if Equals(suc.ID, value.ID) {
-		// If the node is equal than its successor, skip this node and continue with the next one.
+		// Si el nodo es igual a su sucesor, salta este nodo y sigue con el proximo
 		return next
 	} else {
-		// Otherwise, if the obtained successor is this node, then the ring has already been turned around,
-		// so there are no more successors to add to the queue.
-		// Therefore, return null to restart the fixing cycle.
+		/*
+		 En el caso de que el sucesor obtenido sea este nodo, entoces el anillo a sido
+		 invertido por lo que no hay mas sucesor que agregar a la cola. Por tanto se
+		 devuelve null para reiniciar el arreglo del ciclo
+		*/
 		return nil
 	}
 
-	log.Trace("Successor queue entry fixed.")
+	log.Trace("Cola de sucesor arreglada.")
 	return next
 }
 
-// PeriodicallyFixSuccessor periodically fix entries of the queue of successors.
+// PeriodicallyFixSuccessor Periodicamente arregla la cola de sucesor.
 func (node *Node) PeriodicallyFixSuccessor() {
-	log.Debug("Fix successor thread started.")
+	log.Debug("Hilo para arreglar la cola de sucesor arreglado.")
 
-	ticker := time.NewTicker(500 * time.Millisecond) // Set the time between routine activations.
-	var entry *QueueNode[chord.Node] = nil           // Queue node entry for iterations.
+	// Establece el tiempo entre la activacion de las rutinas
+	ticker := time.NewTicker(500 * time.Millisecond)
+	//Se va a iterar por la cola de sucesores
+	var entry *QueueNode[chord.Node] = nil
 	for {
 		select {
-		case <-node.shutdown: // If node server is shutdown, stop the thread.
+		case <-node.shutdown: // SI el nodo servidor esta caido se termina el hilo
 			ticker.Stop()
 			return
-		case <-ticker.C: // If it's time, fix an entry of the queue.
-			// Lock the successor to read it, and unlock it after.
+			//Si es tiempo arregla una entrada de la cola
+		case <-ticker.C:
+			// Bloquea el sucesor para leer de el, se desbloquea al carg
 			node.sucLock.RLock()
-			suc := node.successors.Beg() // Obtain this node successor.
+			// Se obtiene el sucesor de este nodo
+			suc := node.successors.Beg()
 			node.sucLock.RUnlock()
 
-			// If successor is not this node, then the queue of successors contains at least one successor.
-			// Therefore, it needs to be fixed.
+			// Si el sucesor es distinto del nodo, entonces la cola posee al menos un nodo
+			// Por tanto debe ser arreglado
 			if !Equals(suc.ID, node.ID) {
-				// If actual queue node entry is null, restart the fixing cycle,
-				// starting at the first queue node.
+				// Si el nodo actual es vacio entonces el ciclod debe ser arreglado,
+				// empezando por el primer nodo de la query
 				if entry == nil {
-					// Lock the successor to read it, and unlock it after.
+					// Bloquea el sucesor para leer de el, se desbloquea al terminar
 					node.sucLock.RLock()
 					entry = node.successors.first
 					node.sucLock.RUnlock()
 				}
-				entry = node.FixSuccessor(entry) // Fix the corresponding entry.
+				// Arregla la entrada correspondiente
+				entry = node.FixSuccessor(entry)
 			} else {
-				entry = nil // Otherwise, reset the queue node entry.
+				// En otro caso se resetea
+				entry = nil
 			}
 		}
 	}
 }
 
-// FixStorage fix a particular key location on storage dictionary.
-// To do this, it locates the node that corresponds to this key.
-// If the node is this node, or its predecessor, then the key is correctly stored.
-// Otherwise, the key is in a bad location, and therefore it's relocated and deleted from this node storage.
+/*
+FixStorage arregla la  localizacon de  una llave en particular dentro del
+diccionario de almacenamiento. Para eso localiza el nodo  que le correspondiente. Si
+el nodo es este nodo o su predecesor, entonces no hay problema.
+En otro caso esta mal localizada y por tanto debe ser reubicada y eliminada
+*/
 func (node *Node) FixStorage(key string) {
-	// Lock the predecessor to read it, and unlock it after.
+	//Bloquea el predecesor para leer de el, lo desbloquea al terminar
 	node.predLock.RLock()
 	pred := node.predecessor
 	node.predLock.RUnlock()
 
-	keyNode, err := node.LocateKey(key) // Locate the node that corresponds to the key.
+	// Localiza el nodo al que le corresponde la clave
+	keyNode, err := node.LocateKey(key)
 	if err != nil {
-		log.Errorf("Error fixing local storage dictionary.\n%s", err.Error())
+		log.Errorf("Error arreglando el diccionario de almacenamient local .\n%s", err.Error())
 		return
 	}
 
-	// If the obtained node is not this node, neither this node predecessor, then it is bad located.
+	// Si el nodo obtenido es distinto a el nodo actual o su predecesor, entonces esta mal ubicado
 	if !Equals(keyNode.ID, node.ID) && !Equals(keyNode.ID, pred.ID) {
-		// Lock the storage dictionary to read it, and unlock it after.
+		// Bloquea el diccionario para leer de el, lo desbloquea al terminar
 		node.dictLock.RLock()
-		value, err := node.dictionary.Get(key) // Get the value associated to the key.
+		// Consigue el valor asociado a esta llave
+		value, err := node.dictionary.Get(key)
 		node.dictLock.RUnlock()
 		if err != nil {
-			// Don't report the error and return, because if the key is no longer in the dictionary
-			// then it's simply no longer necessary to relocate it.
+			/*
+				En este caso no se reporta el error, porque la clave ya no esta aqui.Por lo
+				que no es necesario reubicarlo.
+			*/
 			return
 		}
 
-		// Lock the storage dictionary to write on it, and unlock it after.
+		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar
 		node.dictLock.Lock()
-		err = node.dictionary.Delete(key) // Delete the key from local storage.
+		// Elimina la llave del almacenamiento local
+		err = node.dictionary.Delete(key)
 		node.dictLock.Unlock()
 		if err != nil {
-			log.Errorf("Error deleting key %s in local storage.\n%s", keyNode.IP, err.Error())
+			log.Errorf("Error eliminando la llave %s en el almacenamient local.\n%s", keyNode.IP, err.Error())
 			return
 		}
 
-		// Set this <key, value> pair on the corresponding node.
+		// Establece este par <key, value> en el nodo correspondiente
 		err = node.RPC.Set(keyNode, &chord.SetRequest{Key: key, Value: value})
 		if err != nil {
-			log.Errorf("Error relocating key %s to %s.\n%s", key, keyNode.IP, err.Error())
-			// In case of error, reinsert the key on this node storage, to prevent the loss of information.
-			// Lock the storage dictionary to write on it, and unlock it after.
+			log.Errorf("Error reubicando la llave  %s a %s.\n%s", key, keyNode.IP, err.Error())
+			/*
+				En caso de error, reinserta la llave en este nodo, para prevenir
+				la perdidad de informacion.
+			*/
+			// Bloquea el diccionario para escribir en el, desbloquea al terminar
 			node.dictLock.Lock()
-			err = node.dictionary.Set(key, value) // Reinsert the key on local storage.
+			// Reinserta la clave en el almacenamiento local
+			err = node.dictionary.Set(key, value)
 			node.dictLock.Unlock()
 			if err != nil {
-				log.Errorf("Error reinserting key %s in local storage.\n%s", keyNode.IP, err.Error())
+				log.Errorf("Error reinsertando la llave %s en el almacenamiento local .\n%s", keyNode.IP, err.Error())
 				return
 			}
 			return
@@ -448,44 +494,53 @@ func (node *Node) FixStorage(key string) {
 	}
 }
 
-// PeriodicallyFixStorage periodically fix storage dictionary.
+// PeriodicallyFixStorage periodicamente arregla el almcenamiento local.
 func (node *Node) PeriodicallyFixStorage() {
-	log.Debug("Fix storage thread started.")
-
-	next := 0                                        // Index of the actual storage key to fix.
-	keys := make([]string, 0)                        // Keys to fix.
-	ticker := time.NewTicker(500 * time.Millisecond) // Set the time between routine activations.
+	log.Debug("Hilo para arreglar el almacenamiento empezado.")
+	// Indice de la llave actual para arreglar.
+	next := 0
+	// Llaves a arreglar
+	keys := make([]string, 0)
+	// Establece el tiempo entre reactivacion de las rutinas
+	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
 		select {
-		case <-node.shutdown: // If node server is shutdown, stop the thread.
+		// Si el nodo servidor esta apagado, entonces termina el hilo
+		case <-node.shutdown:
 			ticker.Stop()
 			return
-		case <-ticker.C: // If it's time, fix the correspondent storage entry.
-			// If there is no more keys to fix.
+			// Si es tiempo arregla el almacenamiento actual
+		case <-ticker.C:
+			// Si no hay mas claves para arreglar
 			if next == len(keys) {
-				// Lock the predecessor to read it, and unlock it after.
+				// Bloquea el predecesor para leer de el, desbloquealo al terminar
 				node.predLock.RLock()
 				pred := node.predecessor
 				node.predLock.RUnlock()
 
-				// Lock the storage dictionary to read it, and unlock it after
+				// Bloquea el diccionario para leer de el, desbloquealo al terminar
 				node.dictLock.RLock()
-				_, out, err := node.dictionary.Partition(pred.ID, node.ID) // Obtain the dictionary of replicated keys.
+				// Obtener el diccionario de las llaves replicadas
+				_, out, err := node.dictionary.Partition(pred.ID, node.ID)
 				node.dictLock.RUnlock()
 				if err != nil {
-					log.Errorf("Error fixing local storage dictionary. "+
-						"Cannot obtain replicated keys on this node.\n%s", err.Error())
+					log.Errorf("Error arreglando el diccionario de almacenamiento local: "+
+						"No se puede obtener las llaves replicadas de este nodo.\n%s", err.Error())
 					continue
 				}
 
-				keys = Keys(out) // Obtain the replicated keys.
-				next = 0         // Reset the index of the key to fix.
+				// Obtener las llaves replicadas
+				keys = Keys(out)
+				// Restablece el indice de la llave a arreglar.
+				next = 0
 			}
 
-			// If there are remaining keys to fix.
+			// Si quedan llaves por arreglar
 			if next < len(keys) {
-				node.FixStorage(keys[next]) // Fix the corresponding key.
-				next++                      // Update the index of the key to fix.
+				// Arregla la llave correspondiente
+				node.FixStorage(keys[next])
+				// Actualiza el indicie de la llave a arreglar
+				next++
 			}
 		}
 	}

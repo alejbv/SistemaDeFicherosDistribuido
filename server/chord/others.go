@@ -3,6 +3,7 @@ package chord
 import (
 	"bytes"
 	"hash"
+	"math/big"
 	"net"
 
 	log "github.com/sirupsen/logrus"
@@ -39,23 +40,6 @@ func GetOutboundIP() net.IP {
 	return localAddr.IP
 }
 
-func HashKey(key string, hash func() hash.Hash) ([]byte, error) {
-	log.Trace("Hashing key: " + key + ".\n")
-	h := hash()
-	if _, err := h.Write([]byte(key)); err != nil {
-		log.Error("Error hashing key " + key + ".\n" + err.Error() + ".\n")
-		return nil, err
-	}
-	value := h.Sum(nil)
-
-	return value, nil
-}
-
-// Equals comprueba si 2 IDs son iguales
-func Equals(ID1, ID2 []byte) bool {
-	return bytes.Compare(ID1, ID2) == 0
-}
-
 func Keys[T any](dictionary map[string]T) []string {
 	keys := make([]string, 0)
 
@@ -64,6 +48,37 @@ func Keys[T any](dictionary map[string]T) []string {
 	}
 
 	return keys
+}
+
+// FingerID computa  (n + 2^i) mod(2^m)
+func FingerID(n []byte, i int, m int) []byte {
+	// Convierte ID a bigint
+	id := (&big.Int{}).SetBytes(n)
+
+	// Calcula 2^i.
+	two := big.NewInt(2)
+	pow := big.Int{}
+	pow.Exp(two, big.NewInt(int64(i)), nil)
+
+	// Calcula la suma de n y 2^i.
+	sum := big.Int{}
+	sum.Add(id, &pow)
+
+	// Calcula  2^m.
+	pow = big.Int{}
+	pow.Exp(two, big.NewInt(int64(m)), nil)
+
+	// Aplica el modulo.
+	id.Mod(&sum, &pow)
+
+	//Devuelve el resultado.
+	return id.Bytes()
+}
+
+// Equals comprueba si 2 IDs son iguales
+func Equals(ID1, ID2 []byte) bool {
+	return bytes.Equal(ID1, ID2)
+	//return bytes.Compare(ID1, ID2) == 0
 }
 
 func KeyBetween(key string, hash func() hash.Hash, L, R []byte) (bool, error) {
@@ -85,4 +100,16 @@ func Between(ID, L, R []byte) bool {
 	// Si L > R, es un segmento sobre el final del anillo.
 	// Entonces, ID esta entre L y R si L < ID o ID < R.
 	return bytes.Compare(L, ID) < 0 || bytes.Compare(ID, R) < 0
+}
+
+func HashKey(key string, hash func() hash.Hash) ([]byte, error) {
+	log.Trace("Hashing key: " + key + ".\n")
+	h := hash()
+	if _, err := h.Write([]byte(key)); err != nil {
+		log.Error("Error hashing key " + key + ".\n" + err.Error() + ".\n")
+		return nil, err
+	}
+	value := h.Sum(nil)
+
+	return value, nil
 }
