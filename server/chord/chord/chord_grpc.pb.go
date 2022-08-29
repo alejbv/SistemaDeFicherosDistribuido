@@ -36,6 +36,13 @@ type ChordClient interface {
 	Notify(ctx context.Context, in *NotifyRequest, opts ...grpc.CallOption) (*NotifyResponse, error)
 	// Check comprueba si el nodo esta vivo.
 	Check(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckResponse, error)
+	//
+	//Manda un fichero hacia el sistema y estos son guardados con
+	//las etiquetas contenidas en tag-list
+	AddFile(ctx context.Context, in *AddFileRequest, opts ...grpc.CallOption) (*AddFileResponse, error)
+	//
+	//Dado un nombre de un fichero y una ID de un nodo devue
+	AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error)
 	// Get recupera el valor asociado a la clave.
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	// Set almacena un par <clave, valor>.
@@ -121,6 +128,24 @@ func (c *chordClient) Check(ctx context.Context, in *CheckRequest, opts ...grpc.
 	return out, nil
 }
 
+func (c *chordClient) AddFile(ctx context.Context, in *AddFileRequest, opts ...grpc.CallOption) (*AddFileResponse, error) {
+	out := new(AddFileResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/AddFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chordClient) AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error) {
+	out := new(AddTagResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/AddTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chordClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Get", in, out, opts...)
@@ -193,6 +218,13 @@ type ChordServer interface {
 	Notify(context.Context, *NotifyRequest) (*NotifyResponse, error)
 	// Check comprueba si el nodo esta vivo.
 	Check(context.Context, *CheckRequest) (*CheckResponse, error)
+	//
+	//Manda un fichero hacia el sistema y estos son guardados con
+	//las etiquetas contenidas en tag-list
+	AddFile(context.Context, *AddFileRequest) (*AddFileResponse, error)
+	//
+	//Dado un nombre de un fichero y una ID de un nodo devue
+	AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error)
 	// Get recupera el valor asociado a la clave.
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	// Set almacena un par <clave, valor>.
@@ -232,6 +264,12 @@ func (UnimplementedChordServer) Notify(context.Context, *NotifyRequest) (*Notify
 }
 func (UnimplementedChordServer) Check(context.Context, *CheckRequest) (*CheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
+}
+func (UnimplementedChordServer) AddFile(context.Context, *AddFileRequest) (*AddFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddFile not implemented")
+}
+func (UnimplementedChordServer) AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddTag not implemented")
 }
 func (UnimplementedChordServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
@@ -390,6 +428,42 @@ func _Chord_Check_Handler(srv interface{}, ctx context.Context, dec func(interfa
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chord_AddFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).AddFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chord.Chord/AddFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).AddFile(ctx, req.(*AddFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Chord_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(AddTagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).AddTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chord.Chord/AddTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).AddTag(ctx, req.(*AddTagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Chord_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
@@ -532,6 +606,14 @@ var Chord_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Check",
 			Handler:    _Chord_Check_Handler,
+		},
+		{
+			MethodName: "AddFile",
+			Handler:    _Chord_AddFile_Handler,
+		},
+		{
+			MethodName: "AddTag",
+			Handler:    _Chord_AddTag_Handler,
 		},
 		{
 			MethodName: "Get",

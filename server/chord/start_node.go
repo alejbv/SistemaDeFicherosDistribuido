@@ -117,7 +117,7 @@ func (node *Node) Stop() error {
 	// Si el nodo servidor actualmente no está en ejecucion, reporta un error.
 	if !IsOpen(node.shutdown) {
 		log.Error("Error parando el servidor: este nodo servidor ya está caido.")
-		return errors.New("errorparando el servidor: este nodo servidor ya está caido.")
+		return errors.New("error parando el servidor: este nodo servidor ya está caido")
 	}
 
 	//Bloquea el sucesor para leer de el, se desbloquea al terminar
@@ -164,6 +164,7 @@ func (node *Node) Stop() error {
 	return nil
 }
 
+// Posible Metodo a modificar
 // GetKey recupera el valor asociado con una llave.
 func (node *Node) GetKey(key string, lock bool) ([]byte, error) {
 	//Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
@@ -180,6 +181,7 @@ func (node *Node) GetKey(key string, lock bool) ([]byte, error) {
 	return response.Value, nil
 }
 
+// Posible Metodo a modificar
 // SetKey establece un par <key, value> en el almacenamiento.
 func (node *Node) SetKey(key string, value []byte, lock bool) error {
 	// Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
@@ -193,6 +195,7 @@ func (node *Node) SetKey(key string, value []byte, lock bool) error {
 	return err
 }
 
+// Posible Metodo a modificar
 // DeleteKey elimina un par  <key, value> del almacenamiento.
 func (node *Node) DeleteKey(key string, lock bool) error {
 	// Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
@@ -241,7 +244,7 @@ func (node *Node) Join(knownNode *chord.Node) error {
 	// Si la ID obtenida es exactamente la ID de este nodo, entonces este nodo ya existe.
 	if Equals(suc.ID, node.ID) {
 		log.Error("Error uniendose al anillo chord: un nodo con esta ID ya existe.")
-		return errors.New("errror uniendose al anillo chord: un nodo con esta ID ya existe.")
+		return errors.New("error uniendose al anillo chord: un nodo con esta ID ya existe")
 	}
 
 	// Bloquea el sucesor para escribir en el, al terminar se desbloquea.
@@ -297,8 +300,8 @@ func (node *Node) LocateKey(key string) (*chord.Node, error) {
 	// Obteniendo el ID relativo a esta llave
 	id, err := HashKey(key, node.config.Hash)
 	if err != nil {
-		log.Errorf("Error localizando la llave: %s.", key)
-		return nil, errors.New(fmt.Sprintf("error localizando la llave: %s.\n%s", key, err.Error()))
+		log.Errorf("Error generando la llave: %s.", key)
+		return nil, errors.New(fmt.Sprintf("error generando la llave: %s.\n%s", key, err.Error()))
 	}
 
 	// Busca y obtiene el sucesor de esta ID
@@ -333,6 +336,7 @@ func (node *Node) ClosestFinger(ID []byte) *chord.Node {
 	return node.Node
 }
 
+// Posible Metodo a modificar
 // AbsorbPredecessorKeys agrega las llaves replicadas del anterior predecesor a este nodo.
 func (node *Node) AbsorbPredecessorKeys(old *chord.Node) {
 	// Si el anterior predecesor no es este nodo.
@@ -371,6 +375,7 @@ func (node *Node) AbsorbPredecessorKeys(old *chord.Node) {
 	}
 }
 
+// Posible Metodo a modificar
 // DeletePredecessorKeys elimina las llaves replicadas del viejo sucesor en este nodo.
 // Devuelve las llaves actuales, las replicadas actuales y las eliminadas.
 func (node *Node) DeletePredecessorKeys(old *chord.Node) (map[string][]byte, map[string][]byte, map[string][]byte, error) {
@@ -413,6 +418,7 @@ func (node *Node) DeletePredecessorKeys(old *chord.Node) (map[string][]byte, map
 	return in, out, nil, nil
 }
 
+// Posible Metodo a modificar
 // UpdatePredecessorKeys actualiza el nuevo sucesor con la clave correspondiente.
 func (node *Node) UpdatePredecessorKeys(old *chord.Node) {
 	//  Bloquea el predecesor para leer de el, lo desbloquea al terminar.
@@ -487,6 +493,7 @@ func (node *Node) UpdatePredecessorKeys(old *chord.Node) {
 	}
 }
 
+// Posible Metodo a modificar
 // UpdateSuccessorKeys actualiza el nuevo sucesor replicando las llaves del nodo actual.
 func (node *Node) UpdateSuccessorKeys() {
 	//Bloquea el predecesor para leer de el, al terminar se desbloquea.

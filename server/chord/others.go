@@ -5,6 +5,7 @@ import (
 	"hash"
 	"math/big"
 	"net"
+	"os"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -103,13 +104,20 @@ func Between(ID, L, R []byte) bool {
 }
 
 func HashKey(key string, hash func() hash.Hash) ([]byte, error) {
-	log.Trace("Hashing key: " + key + ".\n")
+	log.Trace("Obteniendo el hash de la llave: " + key + ".\n")
 	h := hash()
 	if _, err := h.Write([]byte(key)); err != nil {
-		log.Error("Error hashing key " + key + ".\n" + err.Error() + ".\n")
+		log.Error("Error obteniendo el hash de la llave " + key + ".\n" + err.Error() + ".\n")
 		return nil, err
 	}
 	value := h.Sum(nil)
 
 	return value, nil
+}
+
+func FileIsThere(path string) bool {
+	if _, err := os.Stat(path); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }

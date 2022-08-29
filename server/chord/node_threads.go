@@ -163,7 +163,7 @@ func (node *Node) CheckSuccessor() {
 			log.Errorf("Sucesor en %s ha fallado.\n%s", suc.IP, err.Error())
 		} else {
 			// If successor is alive, return.
-			log.Trace("Successor alive.")
+			log.Trace("El sucesor esta vivo.")
 			return
 		}
 	}
@@ -428,6 +428,7 @@ func (node *Node) PeriodicallyFixSuccessor() {
 	}
 }
 
+// Posible Metodo a modificar
 /*
 FixStorage arregla la  localizacon de  una llave en particular dentro del
 diccionario de almacenamiento. Para eso localiza el nodo  que le correspondiente. Si
@@ -443,7 +444,7 @@ func (node *Node) FixStorage(key string) {
 	// Localiza el nodo al que le corresponde la clave
 	keyNode, err := node.LocateKey(key)
 	if err != nil {
-		log.Errorf("Error arreglando el diccionario de almacenamient local .\n%s", err.Error())
+		log.Errorf("Error arreglando el diccionario de almacenamiento local .\n%s", err.Error())
 		return
 	}
 
@@ -494,6 +495,7 @@ func (node *Node) FixStorage(key string) {
 	}
 }
 
+// Posible Metodo a modificar
 // PeriodicallyFixStorage periodicamente arregla el almcenamiento local.
 func (node *Node) PeriodicallyFixStorage() {
 	log.Debug("Hilo para arreglar el almacenamiento empezado.")

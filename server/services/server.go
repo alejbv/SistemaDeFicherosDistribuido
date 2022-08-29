@@ -106,8 +106,9 @@ var (
 )
 
 func StartServer(network string, rsaPrivateKeyPath string, rsaPublicteKeyPath string) {
+
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
-	fmt.Println("The Tag File System Service has started")
+	fmt.Println("El servicio de Sistema de Ficheros a empezado")
 
 	var err error
 	rsaPrivate = rsaPrivateKeyPath

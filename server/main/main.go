@@ -6,6 +6,7 @@ import (
 
 func main() {
 
+	//logging.SettingLogger(log.InfoLevel, "server")
 	rsaPrivateKeyPath := "pv.pem"
 	rsaPublicteKeyPath := "pub.pem"
 	network := "tcp"

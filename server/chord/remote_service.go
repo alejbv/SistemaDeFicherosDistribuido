@@ -31,6 +31,14 @@ type RemoteServices interface {
 	// Check Comprueba si un nodo remoto esta vivo.
 	Check(*chord.Node) error
 
+	// Metodos de la aplicacion
+
+	// Añade un archivo al almacenamiento local del nodo correspondiente
+	AddFile(node *chord.Node, req *chord.AddFileRequest) error
+	// Agrega una etiqueta con la respectiva informacion del archivo o los archivos a los que apunta
+	AddTag(node *chord.Node, req *chord.AddTagRequest) error
+
+	// metodos propios del sistema
 	// Get recupera el valor asociado  a una llave en el almacenamiento de un nodo remoto.
 	Get(node *chord.Node, req *chord.GetRequest) (*chord.GetResponse, error)
 	// Set establece un par  <key, value> en el almacenamiento de un nodo remoto.
@@ -73,7 +81,7 @@ func (services *GRPCServices) Start() error {
 
 	// Si los servicios de la capa de tranporte estan en funcionamiento reporta un error .
 	if IsOpen(services.shutdown) {
-		message := "Error empezando el servicio:los servicios de la capa de tranporte estan en funcionamiento .\n"
+		message := " Error empezando el servicio:los servicios de la capa de tranporte estan en funcionamiento"
 		log.Error(message)
 		return errors.New(message)
 	}
@@ -96,7 +104,7 @@ func (services *GRPCServices) Stop() error {
 
 	// Si los servicios de la capa de transporte no estan en funcionamiento reporta error.
 	if !IsOpen(services.shutdown) {
-		message := "Error parando los servicios: estos ya estan cerrados.\n"
+		message := " Error parando los servicios: estos ya estan cerrados"
 		log.Error(message)
 		return errors.New(message)
 	}
@@ -112,7 +120,7 @@ func (services *GRPCServices) Connect(addr string) (*RemoteNode, error) {
 
 	// Comprueba si el servicio esta apagado, en caso de que si se termina y se reporta.
 	if !IsOpen(services.shutdown) {
-		message := "Error creando la conexion: se deben empezar los servicios de la capa de transporte primero .\n"
+		message := " Error creando la conexion: se deben empezar los servicios de la capa de transporte primero"
 		log.Error(message)
 		return nil, errors.New(message)
 	}
@@ -120,7 +128,7 @@ func (services *GRPCServices) Connect(addr string) (*RemoteNode, error) {
 	services.connectionsMtx.RLock()
 	if services.connections == nil {
 		services.connectionsMtx.Unlock()
-		message := "Error creando la conexion: la tabla de conexion esta vacia.\n"
+		message := " Error creando la conexion: la tabla de conexion esta vacia"
 		log.Error(message)
 		return nil, errors.New(message)
 	}
@@ -206,10 +214,10 @@ func (services *GRPCServices) PeriodicallyCloseConnections() {
 	}
 }
 
-// GetPredecessor devuelve el nodo que se cree que es el actual predecesor de un nodo remoto.
+// GetPredecessor devuelve el nodo que se cree que es el actual predecesor de un nodo remoto
 func (services *GRPCServices) GetPredecessor(node *chord.Node) (*chord.Node, error) {
 	if node == nil {
-		return nil, errors.New("No se puede establecer conexion con un nodo nulo.\n")
+		return nil, errors.New(" No se puede establecer conexion con un nodo nulo")
 	}
 
 	// Estableciendo conexion con el nodo remoto
@@ -230,7 +238,7 @@ func (services *GRPCServices) GetPredecessor(node *chord.Node) (*chord.Node, err
 // GetSuccessor returns the node believed to be the current successor of a remote node.
 func (services *GRPCServices) GetSuccessor(node *chord.Node) (*chord.Node, error) {
 	if node == nil {
-		return nil, errors.New("No se puede establecer una conexion con un nodo vacio.\n")
+		return nil, errors.New(" No se puede establecer una conexion con un nodo vacio")
 	}
 
 	// Estableciendo conexion con un nodo remoto
@@ -251,7 +259,7 @@ func (services *GRPCServices) GetSuccessor(node *chord.Node) (*chord.Node, error
 // SetPredecessor establece el predecesor de un nodo remoto.
 func (services *GRPCServices) SetPredecessor(node, pred *chord.Node) error {
 	if node == nil {
-		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
+		return errors.New(" No se puede establecer conexion con un nodo vacio")
 	}
 
 	// Establecida conexion con un nodo remoto
@@ -273,7 +281,7 @@ func (services *GRPCServices) SetPredecessor(node, pred *chord.Node) error {
 // SetSuccessor establece el sucesor de un nodo remoto.
 func (services *GRPCServices) SetSuccessor(node, suc *chord.Node) error {
 	if node == nil {
-		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
+		return errors.New(" No se puede establecer conexion con un nodo vacio")
 	}
 
 	// Establecida conexion con un nodo remoto
@@ -295,7 +303,7 @@ func (services *GRPCServices) SetSuccessor(node, suc *chord.Node) error {
 // FindSuccessor encuentra el nodo que sucede a esta ID, empezando desde el nodo remoto.
 func (services *GRPCServices) FindSuccessor(node *chord.Node, id []byte) (*chord.Node, error) {
 	if node == nil {
-		return nil, errors.New("No se puede establecer una conexion con un nodo nulo.\n")
+		return nil, errors.New(" No se puede establecer una conexion con un nodo nulo")
 	}
 
 	remoteNode, err := services.Connect(node.IP + ":" + node.Port) // Establece la conexion con el nodo remoto.
@@ -320,7 +328,7 @@ func (services *GRPCServices) FindSuccessor(node *chord.Node, id []byte) (*chord
 // Notify notifica a un nodo remoto que es posible que tenga un nuevo predecesor.
 func (services *GRPCServices) Notify(node, pred *chord.Node) error {
 	if node == nil {
-		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
+		return errors.New(" No se puede establecer conexion con un nodo vacio")
 	}
 
 	// Estableciendo conexion con un nodo remoto
@@ -342,7 +350,7 @@ func (services *GRPCServices) Notify(node, pred *chord.Node) error {
 // Comprueba si un nodo remoto esta vivo.
 func (services *GRPCServices) Check(node *chord.Node) error {
 	if node == nil {
-		return errors.New("No se puede establecer una conexion con un nodo nulo.\n")
+		return errors.New(" No se puede establecer una conexion con un nodo nulo")
 	}
 
 	// Establce conexion con el nodo remoto
@@ -363,7 +371,7 @@ func (services *GRPCServices) Check(node *chord.Node) error {
 // Get devuelve el valor asociado a una llave en el almacenamiento de un nodo remoto.
 func (services *GRPCServices) Get(node *chord.Node, req *chord.GetRequest) (*chord.GetResponse, error) {
 	if node == nil {
-		return nil, errors.New("No se puede establecer conexion con un nodo vacio.\n")
+		return nil, errors.New(" No se puede establecer conexion con un nodo vacio")
 	}
 	// Estableciendo conexion con un nodo remoto.
 	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
@@ -382,7 +390,7 @@ func (services *GRPCServices) Get(node *chord.Node, req *chord.GetRequest) (*cho
 // Set almacena un par  <key, value> en el almacenamiento de un nodo remoto.
 func (services *GRPCServices) Set(node *chord.Node, req *chord.SetRequest) error {
 	if node == nil {
-		return errors.New("No se puede establecer una conexion con un nodo vacio.\n")
+		return errors.New(" No se puede establecer una conexion con un nodo vacio")
 	}
 
 	// Estableciendo conexion con un nodo remoto.
@@ -403,7 +411,7 @@ func (services *GRPCServices) Set(node *chord.Node, req *chord.SetRequest) error
 // Delete elimina un par <key, value> del almacenamiento de un nodo remoto.
 func (services *GRPCServices) Delete(node *chord.Node, req *chord.DeleteRequest) error {
 	if node == nil {
-		return errors.New("No se puede establecer conexion con un nodo vacio.\n")
+		return errors.New(" No se puede establecer conexion con un nodo vacio")
 	}
 
 	// Estableciendo conexion con un nodo remoto
@@ -424,7 +432,7 @@ func (services *GRPCServices) Delete(node *chord.Node, req *chord.DeleteRequest)
 // Partition devuelve todos los pares <key, values>  en un intervalo dado del almacenamiento de un nodo remoto.
 func (services *GRPCServices) Partition(node *chord.Node, req *chord.PartitionRequest) (*chord.PartitionResponse, error) {
 	if node == nil {
-		return nil, errors.New("No se puede establecer conexion con un nodo vacio.\n")
+		return nil, errors.New(" No se puede establecer conexion con un nodo vacio")
 	}
 
 	// Establece la conexion con el nodo remoto
@@ -438,13 +446,13 @@ func (services *GRPCServices) Partition(node *chord.Node, req *chord.PartitionRe
 	defer cancel()
 
 	// Devuelve el resultado de la llamada remota.
-	return remoteNode.Partition(ctx, &chord.PartitionRequest{})
+	return remoteNode.Partition(ctx, req)
 }
 
 // Extend agrega una lista de pares  <key, values> en el diccionario de almacenamiento de un  odo remoto.
 func (services *GRPCServices) Extend(node *chord.Node, req *chord.ExtendRequest) error {
 	if node == nil {
-		return errors.New("No se puede establecer conexion con un nodo nulo.\n")
+		return errors.New(" No se puede establecer conexion con un nodo nulo")
 	}
 
 	// Estableciendo conexion con un nodo remoto
@@ -465,7 +473,7 @@ func (services *GRPCServices) Extend(node *chord.Node, req *chord.ExtendRequest)
 // Discard elimina todos los pares <key, values>  en el almacenamiento interno de un nodo remoto.
 func (services *GRPCServices) Discard(node *chord.Node, req *chord.DiscardRequest) error {
 	if node == nil {
-		return errors.New("No se puede establecer una conexion con un nodo vacio.\n")
+		return errors.New(" No se puede establecer una conexion con un nodo vacio")
 	}
 
 	// Estableciendo conexion con un nodo remoto
@@ -480,5 +488,50 @@ func (services *GRPCServices) Discard(node *chord.Node, req *chord.DiscardReques
 
 	// Devuelve el resultado de la llamada remota.
 	_, err = remoteNode.Discard(ctx, req)
+	return err
+}
+
+/*
+Metodos propios de la aplicacion
+*/
+// Set almacena  un fichero en el almacenamiento local .
+func (services *GRPCServices) AddFile(node *chord.Node, req *chord.AddFileRequest) error {
+
+	if node == nil {
+		return errors.New(" No se puede establecer una conexion con un nodo vacio")
+	}
+
+	// Estableciendo conexion con un nodo remoto.
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Devuelve el resultado de la llamada remota.
+	_, err = remoteNode.AddFile(ctx, req)
+	return err
+}
+
+func (services *GRPCServices) AddTag(node *chord.Node, req *chord.AddTagRequest) error {
+	if node == nil {
+		return errors.New(" No se puede establecer una conexion con un nodo vacio")
+	}
+
+	// Estableciendo conexion con un nodo remoto.
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Devuelve el resultado de la llamada remota.
+	_, err = remoteNode.AddTag(ctx, req)
 	return err
 }

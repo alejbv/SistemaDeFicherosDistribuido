@@ -3,12 +3,22 @@ syntax = "proto3";
 package chord;
 option go_package="./server/chord/chord";
 
+// Objetos del Chord
 // Nodo que contiene una ID y una direccion IP.
 message Node {
   bytes ID = 1;
   string IP = 2;
   string port = 3;
 }
+
+// Objeto que representa el archivo que se esta mandando
+message TagFile{
+  string name = 1;
+  string extension = 2;
+  bytes  file =3;
+  repeated string tags = 4;    
+}
+
 
 // Las Request vacias
 message GetPredecessorRequest{}
@@ -103,6 +113,40 @@ message PartitionResponse {
 }
 
 
+// Ficheros Mensajes
+
+message AddFileRequest{
+  TagFile file = 1;
+  bool Replica = 2;
+  bool Lock = 3;
+  string IP = 4;
+}
+
+message AddFileResponse{
+  Node  destine = 1;
+}
+
+
+message AddTagRequest{
+  string Tag = 1;
+  string FileName = 2;
+  string ExtensioName = 3;
+  Node   TargetNode = 4;
+  bool   Replica = 5;
+}
+message AddTagResponse{}
+
+/*
+message DeleteFileRequest{
+    string FileName = 1;
+    string FileExtension = 2;
+    bool   Replica = 3;
+}
+message DeleteFileResponse{}
+
+message DeleteTagRequest{}
+message DeleteTagResponse{}
+*/
 // Chord service for inter-node communication.
 service Chord {
   // GetPredecessor devuelve el nodo que se cree que es el predecesor.
@@ -119,6 +163,28 @@ service Chord {
   rpc Notify(NotifyRequest) returns (NotifyResponse);
   // Check comprueba si el nodo esta vivo.
   rpc Check(CheckRequest) returns (CheckResponse);
+
+
+   /*
+    Manda un fichero hacia el sistema y estos son guardados con
+    las etiquetas contenidas en tag-list
+    */
+  rpc AddFile(AddFileRequest) returns (AddFileResponse);
+  /*
+   Manda a eliminar un archivo
+  */
+  //rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+  /*
+    Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
+  */
+  rpc AddTag(AddTagRequest) returns (AddTagResponse);
+
+  //rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+  /*
+  Dado un nombre de un fichero y una ID de un nodo devue
+  */
+  
+  //rpc GetFile(GetFileRequest) returns (GetFileResponse);
 
   // Get recupera el valor asociado a la clave.
   rpc Get(GetRequest) returns (GetResponse);

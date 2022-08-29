@@ -1,12 +1,13 @@
 package chord
 
 import (
+	"encoding/json"
 	"errors"
 	"hash"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 
+	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord/chord"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -14,20 +15,23 @@ import (
 
 type Storage interface {
 	Get(string) ([]byte, error)
-	Set(string, []byte) error
+	//Set(string, []byte) error
+	Set(*chord.TagFile) error
+	SetTag(string, string, string, *chord.Node) error
 	Delete(string) error
 
-	GetWithLock(string, string) ([]byte, error)
-	SetWithLock(string, []byte, string) error
-	DeleteWithLock(string, string) error
+	/*
+		GetWithLock(string, string) ([]byte, error)
+		SetWithLock(*chord.TagFile, string) error
+		DeleteWithLock(string, string) error
+		Lock(string, string) error
+		Unlock(string, string) error
 
+	*/
 	Partition([]byte, []byte) (map[string][]byte, map[string][]byte, error)
 	Extend(map[string][]byte) error
 	Discard([]string) error
 	Clear() error
-
-	Lock(string, string) error
-	Unlock(string, string) error
 }
 
 type Dictionary struct {
@@ -48,7 +52,7 @@ func (dictionary *Dictionary) Get(key string) ([]byte, error) {
 	value, ok := dictionary.data[key]
 
 	if !ok {
-		return nil, errors.New("Key not found.\n")
+		return nil, errors.New(" Key not found")
 	}
 
 	return value, nil
@@ -163,51 +167,138 @@ func (dictionary *Dictionary) Unlock(key, permission string) error {
 type void struct{}
 
 type DiskDictionary struct {
-	data map[string]void   // Internal dictionary
-	lock map[string]string // Lock states
-	Hash func() hash.Hash  // Hash function to use
+	Path string
+	//data map[string]void // Internal dictionary
+	//lock map[string]string // Lock states
+	Hash func() hash.Hash // Hash function to use
 }
 
-func NewDiskDictionary(hash func() hash.Hash) *DiskDictionary {
+func NewDiskDictionary(hash func() hash.Hash, path string) *DiskDictionary {
 	return &DiskDictionary{
-		data: make(map[string]void),
-		lock: make(map[string]string),
+		//data: make(map[string]void),
+		//lock: make(map[string]string),
+		Path: path,
 		Hash: hash,
 	}
 }
 
 func (dictionary *DiskDictionary) Get(key string) ([]byte, error) {
-	log.Debugf("Loading file: %s\n", key)
+	log.Debugf("Cargando archivo: %s\n", key)
 
 	value, err := ioutil.ReadFile(key)
 	if err != nil {
-		log.Errorf("Error loading file %s:\n%v\n", key, err)
-		return nil, status.Error(codes.Internal, "Couldn't load file")
+		log.Errorf("Error cargando el archivo %s:\n%v\n", key, err)
+		return nil, status.Error(codes.Internal, "No se pudo cargar el archivo")
 	}
 
 	return value, nil
 }
 
-func (dictionary *DiskDictionary) Set(key string, value []byte) error {
-	dictionary.data[key] = void{}
+func (dictionary *DiskDictionary) Set(file *chord.TagFile) error {
+	//dictionary.data[file.Name] = void{}
 
-	log.Debugf("Saving file: %s\n", key)
+	log.Debugf("Guardando el archivo: %s\n", file.Name)
 
-	dir := filepath.Dir(key)
-	err := os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
-		log.Errorf("Couldn't create directory %s:\n%v\n", key, err)
-		return status.Error(codes.Internal, "Couldn't create directory")
+	// Creando el directorio
+	if isthere := FileIsThere(dictionary.Path + "files/" + file.Name); !isthere {
+		err := os.Mkdir(dictionary.Path+"files/"+file.Name, 0666)
+		if err != nil {
+			log.Errorf("No se pudo crear el directorio %s:\n%v\n", file.Name, err)
+			return status.Error(codes.Internal, "No se pudo crear el directorio")
+		}
 	}
+	// Path para crear el archivo
+	filePath := dictionary.Path + "files/" + file.Name + "/" + file.Name + "." + file.Extension
 
-	err = ioutil.WriteFile(key, value, 0600)
-
+	// Creando el archivo
+	fd, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
 	if err != nil {
-		log.Errorf("Error creating file %s:\n%v\n", key, err)
-		return status.Error(codes.Internal, "Couldn't create file")
+		log.Errorf("No se pudo crear el archivo %s:\n%v\n", file.Name+"."+file.Extension, err)
+		return status.Error(codes.Internal, "No se pudo crear el archivo")
+	}
+	defer fd.Close()
+
+	err = ioutil.WriteFile(filePath, file.File, 0644)
+	if err != nil {
+		log.Errorf("Error guardando  el archivo %s:\n%v\n", file.Name, err)
+		return status.Error(codes.Internal, "No se pudo guardar el archivo")
 	}
 
 	return nil
+}
+
+type TagEncoding struct {
+	FileName      string `json:"file_name`
+	FileExtension string `json:"file_extension"`
+	NodeID        []byte `json:"node_id"`
+	NodeIP        string `json:"node_ip"`
+	NodePort      string `json:"node_port"`
+}
+
+func (dictionary *DiskDictionary) SetTag(tag, fileName, fileExtension string, node *chord.Node) error {
+
+	log.Debugf("Guardando la informacion relacionada a la etiqueta: %s\n", tag)
+	// Creando el directorio
+	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
+		err := os.Mkdir(dictionary.Path+"tags/"+tag, 0666)
+		if err != nil {
+			log.Errorf("No se pudo crear el directorio %s:\n%v\n", tag, err)
+			return status.Error(codes.Internal, "No se pudo crear el directorio")
+		}
+
+	}
+	// Path del archivo
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+	// Creando el archivo
+
+	// La lista de la informacion a almacenar
+	var save []TagEncoding
+
+	// Creo el objeto que voy a guardar
+	en := TagEncoding{
+		FileName:      fileName,
+		FileExtension: fileExtension,
+		NodeID:        node.ID,
+		NodeIP:        node.IP,
+		NodePort:      node.Port,
+	}
+
+	// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
+	// En caso de que eso ocurriera, se guarda en save los archivos previos
+	if isThere := FileIsThere(filePath); isThere {
+		jsonInfo, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON", err)
+			return status.Error(codes.Internal, "No se pudo crear el archivo")
+		}
+		err = json.Unmarshal(jsonInfo, &save)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON: %v\n", err)
+			return status.Error(codes.Internal, "No se pudo crear el archivo")
+		}
+		// En otro caso se crea el json
+	} else {
+		// Debe leer el archivo para obtener la informacion
+		fd, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0666)
+		if err != nil {
+			log.Errorf("No se pudo crear el archivo %s:\n%v\n", tag+".json", err)
+			return status.Error(codes.Internal, "No se pudo crear el archivo")
+		}
+		fd.Close()
+
+	}
+	// Agregado el nuevo elemento
+	save = append(save, en)
+
+	Cjson, err := json.MarshalIndent(&save, "", "  ")
+	if err != nil {
+		log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
+		return status.Error(codes.Internal, "No se pudo modificar el archivo")
+
+	}
+
+	return ioutil.WriteFile(filePath, Cjson, 0644)
+
 }
 
 func (dictionary *DiskDictionary) Delete(key string) error {
@@ -215,12 +306,13 @@ func (dictionary *DiskDictionary) Delete(key string) error {
 	delete(dictionary.data, key)
 
 	if err != nil {
-		log.Errorf("Error deleting file:\n%v\n", err)
-		return status.Error(codes.Internal, "Couldn't delete file")
+		log.Errorf("Error eliminando el archivo:\n%v\n", err)
+		return status.Error(codes.Internal, "No se pudo eliminar el archivo")
 	}
 	return nil
 }
 
+/*
 func (dictionary *DiskDictionary) GetWithLock(key, permission string) ([]byte, error) {
 	lock, ok := dictionary.lock[key]
 
@@ -231,11 +323,12 @@ func (dictionary *DiskDictionary) GetWithLock(key, permission string) ([]byte, e
 	return nil, os.ErrPermission
 }
 
-func (dictionary *DiskDictionary) SetWithLock(key string, value []byte, permission string) error {
-	lock, ok := dictionary.lock[key]
+func (dictionary *DiskDictionary) SetWithLock(file *chord.TagFile, permission string) error {
+
+	lock, ok := dictionary.lock[file.GetName()]
 
 	if !ok || permission == lock {
-		return dictionary.Set(key, value)
+		return dictionary.Set(file)
 	}
 
 	return os.ErrPermission
@@ -251,6 +344,31 @@ func (dictionary *DiskDictionary) DeleteWithLock(key string, permission string) 
 	return os.ErrPermission
 }
 
+func (dictionary *DiskDictionary) Lock(key, permission string) error {
+	lock, ok := dictionary.lock[key]
+
+	if ok && permission != lock {
+		return os.ErrPermission
+	}
+
+	dictionary.lock[key] = permission
+
+	return nil
+}
+
+func (dictionary *DiskDictionary) Unlock(key, permission string) error {
+	lock, ok := dictionary.lock[key]
+
+	if ok && permission != lock {
+		return os.ErrPermission
+	}
+
+	delete(dictionary.lock, key)
+	return nil
+}
+
+
+*/
 func (dictionary *DiskDictionary) Partition(L, R []byte) (map[string][]byte, map[string][]byte, error) {
 	in := make(map[string][]byte)
 	out := make(map[string][]byte)
@@ -309,28 +427,5 @@ func (dictionary *DiskDictionary) Clear() error {
 		}
 	}
 
-	return nil
-}
-
-func (dictionary *DiskDictionary) Lock(key, permission string) error {
-	lock, ok := dictionary.lock[key]
-
-	if ok && permission != lock {
-		return os.ErrPermission
-	}
-
-	dictionary.lock[key] = permission
-
-	return nil
-}
-
-func (dictionary *DiskDictionary) Unlock(key, permission string) error {
-	lock, ok := dictionary.lock[key]
-
-	if ok && permission != lock {
-		return os.ErrPermission
-	}
-
-	delete(dictionary.lock, key)
 	return nil
 }

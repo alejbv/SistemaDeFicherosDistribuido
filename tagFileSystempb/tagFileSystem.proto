@@ -1,17 +1,18 @@
 syntax = "proto3";
 
-package tagFile;
-option go_package= "./tagFileSystempb";
+package TagFile;
+option go_package= "./TagFileSystempb";
 
 
-message tagFile{
+message TagFile{
     string name = 1;
-    bytes  file =2;
-    repeated string tags = 3;    
+    string extension = 2;
+    bytes  file =3;
+    repeated string tags = 4;    
 }
 // Implementar lo necesario para agregar archivos
 message AddFilesRequest {
-    tagFile file =1;
+    TagFile file =1;
 
 }
 message AddFilesResponse {
@@ -60,7 +61,7 @@ message DeleteTagsResponse {
     string response =1;
 }
 
-service tagFileSystemService{
+service TagFileSystemService{
 
     /*
     Copia uno o más ficheros hacia el sistema y estos son inscritos con
