@@ -22,6 +22,8 @@ type Storage interface {
 	GetTag(string) ([]TagEncoding, error)
 	DeleteTag(string, string, string) error
 
+	GetPath() string
+	ChangePath(string)
 	/*
 		GetWithLock(string, string) ([]byte, error)
 		SetWithLock(*chord.TagFile, string) error
@@ -49,6 +51,14 @@ func NewDiskDictionary(hash func() hash.Hash, path string) *DiskDictionary {
 		Path: path,
 		Hash: hash,
 	}
+}
+
+func (dictionary *DiskDictionary) GetPath() string {
+	return dictionary.Path
+}
+func (dictionary *DiskDictionary) ChangePath(newPath string) {
+
+	dictionary.Path = newPath
 }
 
 func (dictionary *DiskDictionary) Get(key string) ([]byte, error) {

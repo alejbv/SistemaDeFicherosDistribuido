@@ -40,7 +40,8 @@ func (node *Node) Start() error {
 
 	node.ID = id          // Se le asigna al nodo el ID correspondiente.
 	node.IP = ip.String() //Se le asigna al nodo el IP correspondiente.
-
+	currentPath := node.dictionary.GetPath()
+	node.dictionary.ChangePath(currentPath + string(node.ID) + "/")
 	// Empezando a escuchar en la dirección correspondiente.
 	log.Debug("Tratando de escuchar en la dirección correspondiente.")
 	listener, err := net.Listen("tcp", address)

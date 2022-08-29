@@ -544,7 +544,7 @@ func (services *GRPCServices) AddTag(node *chord.Node, req *chord.AddTagRequest)
 }
 
 // DeleteFile elimina unnfichero del almacenamiento de un nodo remoto.
-func (services *GRPCServices) DeleteFile(node *chord.Node, req *chord.DeleteRequest) error {
+func (services *GRPCServices) DeleteFile(node *chord.Node, req *chord.DeleteFileRequest) error {
 	if node == nil {
 		return errors.New("No se puede establecer conexion con un nodo vacio")
 	}
@@ -560,7 +560,7 @@ func (services *GRPCServices) DeleteFile(node *chord.Node, req *chord.DeleteRequ
 	defer cancel()
 
 	// Se devuelve el resultado de la llamada remota
-	_, err = remoteNode.Delete(ctx, req)
+	_, err = remoteNode.DeleteFile(ctx, req)
 	return err
 }
 func (services *GRPCServices) GetTag(node *chord.Node, req *chord.GetTagRequest) ([]TagEncoding, error) {
