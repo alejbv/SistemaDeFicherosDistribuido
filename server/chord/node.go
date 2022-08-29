@@ -7,6 +7,7 @@ import (
 	"math/big"
 	"net"
 	"os"
+	"strings"
 	"sync"
 
 	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord/chord"
@@ -982,13 +983,252 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 
 			getTagRequest := &chord.GetTagRequest{Tag: tag}
 			res, err := node.RPC.GetTag(keyNode, getTagRequest)
+			if err != nil {
 
+				log.Error("Error al recibr los TagEncoders")
+				return &chord.DeleteFileByQueryResponse{}, errors.New("Error al recibr los TagEncoders\n" + err.Error())
+			}
+			// Se tiene la respuesta y se esta trabajando con ella
+			for _, value := range res {
+				file := value.FileName + "." + value.FileExtension
+				tempNode := &chord.Node{ID: value.NodeID, IP: value.NodeIP, Port: value.NodePort}
+
+				if list, ok := querys[file]; ok {
+					list = append(list, tag)
+					querys[file] = list
+				} else {
+					querys[file] = []string{tag}
+					target[file] = tempNode
+				}
+			}
+			/*
+				Hasta aqui esta la implementacion general, que se deberá usar en los otros metodos
+			*/
 		}
 
+		/*
+
+			A partir de aqui se debe tener listos tanto el diccionario de querys como el de target
+
+		*/
+		// Primero se eliminan los archivos
+		for key, value := range querys {
+			// Esto representa la interseccion de todas las querys, o sea se procesa si
+			// las cumple todas
+			if len(value) == len(tags) {
+				// Separa la clave en el nombre del fichero y su extension
+				idef := strings.Split(key, ".")
+				//Nombre del fichero
+				name := idef[0]
+				// Nombre de la extension
+				extension := idef[1]
+
+				req := &chord.DeleteFileRequest{
+					FileName:      name,
+					FileExtension: extension,
+					Replica:       false,
+				}
+				// Llama a eliminar el fichero
+				err := node.RPC.DeleteFile(target[key], req)
+				if err != nil {
+					return &chord.DeleteFileByQueryResponse{}, err
+				}
+				for _, tag := range value {
+					req := &chord.DeleteTagRequest{
+						Tag:           tag,
+						FileName:      name,
+						FileExtension: extension,
+						Replica:       false,
+					}
+					// Eliminar la informacion del fichero en las etiquetas
+					err := node.RPC.DeleteTag(target[key], req)
+
+					if err != nil {
+						return &chord.DeleteFileByQueryResponse{}, err
+					}
+				}
+			}
+		}
 	}
-	return &chord.DeleteFileByQueryResponse{}, err
+	return &chord.DeleteFileByQueryResponse{}, nil
 }
 func (node *Node) GetTag(req *chord.GetTagRequest, stream chord.Chord_GetTagServer) error {
 
+	log.Infof("Obtener la informacion relacionada a la etiqueta: %s.", req.Tag)
+
+	// Por defecto, toma este nodo para obtener el valor de esta llave del almacenamiento local.
+	keyNode := node.Node
+	// Bloquea el predecesor para leer de el y al terminar lo desbloquea.
+	node.predLock.RLock()
+	pred := node.predecessor
+	node.predLock.RUnlock()
+
+	/*
+	 Si el identificador de la llave no esta entre la ID del nodo y la ID de su predecesor
+	 entonces la llave requerida no esta local necesariamente
+	*/
+	if between, err := KeyBetween(req.Tag, node.config.Hash, pred.ID, node.ID); !between && err == nil {
+		log.Debug("Buscando por el nodo correspondiente.")
+		// Localiza el nodo que almacena la llave
+		keyNode, err = node.LocateKey(req.Tag)
+		if err != nil {
+			log.Errorf("Error localizando el nodo correspondiente a la etiqueta: %s\n.", req.Tag)
+			return errors.New("error localizando el nodo correspondiente a la etiqueta: " + req.Tag + "\n" + err.Error() + "\n")
+		}
+	} else if err != nil {
+		log.Errorf("Error localizando el nodo correspondiente a la etiqueta: %s\n.", req.Tag)
+		return errors.New("error localizando el nodo correspondiente a la etiqueta: " + req.Tag + "\n" + err.Error() + "\n")
+	}
+
+	/*
+		Si el nodo que almacena la llave es este nodo, entonces consigue el valor asociado desde el almacenamiento del nodo
+	*/
+	if Equals(keyNode.ID, node.ID) {
+		log.Debug("Resolviendo la request de forma local.")
+
+		//Bloquea el diccionario para leer de el, se desbloqua al terminar.
+		node.dictLock.RLock()
+		//Consigue el valor asociado a esta llave desde el almacenamiento
+		encoding, err := node.dictionary.GetTag(req.Tag)
+		node.dictLock.RUnlock()
+		if err != nil && err != os.ErrPermission {
+			log.Error("Error consiguiendo la informacion.\n" + err.Error())
+			return os.ErrNotExist
+		} else if err == os.ErrPermission {
+			log.Error("Error consiguiendo la llave: ya esta bloqueado.\n" + err.Error())
+			return err
+		}
+
+		log.Info("Se recupero de forma exitosa.")
+
+		for _, info := range encoding {
+
+			encoder :=
+				&chord.TagEncoder{
+					FileName:      info.FileName,
+					FileExtension: info.FileExtension,
+					NodeID:        string(info.NodeID),
+					NodeIP:        info.NodeIP,
+					NodePort:      info.NodePort,
+				}
+			res := &chord.GetTagResponse{Encoder: encoder}
+			stream.Send(res)
+		}
+		return nil
+	} else {
+		log.Infof("Redirigiendo la request a %s.", keyNode.IP)
+	}
+	// En otro caso, devuelve  el resultado de la llamada remota al nodo correspondiente.
+	res, err := node.RPC.GetTag(keyNode, req)
+	if err != nil {
+		log.Error("Error consiguiendo la informacion.\n" + err.Error())
+		return err
+	}
+	for _, info := range res {
+
+		encoder :=
+			&chord.TagEncoder{
+				FileName:      info.FileName,
+				FileExtension: info.FileExtension,
+				NodeID:        string(info.NodeID),
+				NodeIP:        info.NodeIP,
+				NodePort:      info.NodePort,
+			}
+		res := &chord.GetTagResponse{Encoder: encoder}
+		stream.Send(res)
+	}
 	return nil
+}
+
+func (node *Node) DeleteTag(ctx context.Context, req *chord.DeleteTagRequest) (*chord.DeleteTagResponse, error) {
+	log.Infof("Elimina la informacion del fichero=%s en la etiqueta %s\n.", req.FileName, req.Tag)
+	// Si la request es una replica se resuelve local
+	if req.Replica {
+		log.Debug("Resolviendo la request Delete de forma local (replicacion).")
+
+		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar.
+		node.dictLock.Lock()
+		// Elimina el par <key, value> del almacenamiento.
+		err := node.dictionary.DeleteTag(req.Tag, req.FileName, req.FileExtension)
+		node.dictLock.Unlock()
+		if err != nil && err != os.ErrPermission {
+			log.Error("Error eliminando la informacion.")
+			return &chord.DeleteTagResponse{}, errors.New("error eliminando la informacion.\n" + err.Error())
+		} else if err == os.ErrPermission {
+			log.Error("Error eliminando la informacion: ya esta bloqueado.\n" + err.Error())
+			return &chord.DeleteTagResponse{}, err
+		}
+
+		log.Info("Eliminacion exitosa.")
+		return &chord.DeleteTagResponse{}, nil
+	}
+
+	// Por defecto, se toma este nodo para eliminar el par <key, value> del almacenamiento local.
+	keyNode := node.Node
+	// Bloquea el predecesor para poder leer de el, se desbloquea al terminar
+	node.predLock.RLock()
+	pred := node.predecessor
+	node.predLock.RUnlock()
+
+	/*
+		Si el ID correspondiente al nombre del fichero no esta entre la ID de este nodo y la de su predecesor
+		entonces la request no es necesariamente local
+	*/
+	if between, err := KeyBetween(req.Tag, node.config.Hash, pred.ID, node.ID); !between && err == nil {
+		log.Debug("Buscando por el nodo correspondiente.")
+		// Localiza el nodo que almacena el fichero
+		keyNode, err = node.LocateKey(req.FileName)
+		if err != nil {
+			log.Error("Error buscando el nodo correspondiente a la etiqueta: %s.", req.Tag)
+			return &chord.DeleteTagResponse{}, errors.New("error buscando el nodo correspondiente a la etiqueta: " + req.Tag + "\n" + err.Error())
+		}
+	} else if err != nil {
+		log.Error("Error comparando los ID.")
+		return &chord.DeleteTagResponse{}, errors.New("error comparando los ID.\n" + err.Error())
+	}
+
+	// Si el fichero corresponde a este nodo, se elimina directamente del almacenamiento.
+	if Equals(keyNode.ID, node.ID) {
+		log.Debug("Resolviendo la request DeleteTag de forma local.")
+
+		// Bloquea el diccionario para escribir en el y se desbloquea al terminar la funcion.
+		node.dictLock.Lock()
+		// Elimina la informacion .
+		err := node.dictionary.DeleteTag(req.Tag, req.FileName, req.FileExtension)
+		node.dictLock.Unlock()
+		if err != nil && err != os.ErrPermission {
+			log.Error("Error eliminando el fichero.")
+			return &chord.DeleteTagResponse{}, errors.New("error eliminando el fichero.\n" + err.Error())
+		} else if err == os.ErrPermission {
+			log.Error("Error eliminando el fichero: ya esta bloqueado.\n" + err.Error())
+			return &chord.DeleteTagResponse{}, err
+		}
+
+		log.Info("Eliminacion exitosa.")
+
+		// Bloquea el sucesor para leer de el, se desbloquea al terminar.
+		node.sucLock.RLock()
+		suc := node.successors.Beg()
+		node.sucLock.RUnlock()
+
+		// Si el sucesor no es este nodo, se replica la request para el
+		if Equals(suc.ID, node.ID) {
+			go func() {
+				req.Replica = true
+				log.Debugf("Replicando la request delete para %s.", suc.IP)
+				err := node.RPC.DeleteTag(suc, req)
+				if err != nil {
+					log.Errorf("Error replicando la request delete para %s.\n%s", suc.IP, err.Error())
+				}
+			}()
+		}
+		// En otro caso se devuelve.
+		return &chord.DeleteTagResponse{}, nil
+	} else {
+		log.Infof("Redirigiendo la request delete para %s.", keyNode.IP)
+		// En otro caso, se devuelve el resultado de la llamada remota en el nodo correspondiente
+		return &chord.DeleteTagResponse{}, node.RPC.DeleteTag(keyNode, req)
+
+	}
+
 }

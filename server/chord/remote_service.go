@@ -43,6 +43,7 @@ type RemoteServices interface {
 	AddTag(node *chord.Node, req *chord.AddTagRequest) error
 	// Recupera todo la informacion que tiene un nodo remoto de una etiqueta
 	GetTag(node *chord.Node, req *chord.GetTagRequest) ([]TagEncoding, error)
+	DeleteTag(node *chord.Node, req *chord.DeleteTagRequest) error
 	// metodos propios del sistema
 	// Get recupera el valor asociado  a una llave en el almacenamiento de un nodo remoto.
 	Get(node *chord.Node, req *chord.GetRequest) (*chord.GetResponse, error)
@@ -608,4 +609,24 @@ func (services *GRPCServices) GetTag(node *chord.Node, req *chord.GetTagRequest)
 	}
 
 	return target, nil
+}
+func (services *GRPCServices) DeleteTag(node *chord.Node, req *chord.DeleteTagRequest) error {
+	if node == nil {
+		return errors.New("No se puede establecer una conexion con un nodo vacio")
+	}
+
+	// Estableciendo conexion con un nodo remoto.
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Devuelve el resultado de la llamada remota.
+	_, err = remoteNode.DeleteTag(ctx, req)
+	return err
+
 }

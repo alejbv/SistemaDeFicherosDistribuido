@@ -151,10 +151,15 @@ message DeleteFileRequest{
     bool   Replica = 3;
 }
 message DeleteFileResponse{}
-/*
-message DeleteTagRequest{}
+
+message DeleteTagRequest{
+    string Tag = 1;
+    string FileName = 2;
+    string FileExtension = 3;
+    bool Replica = 4;
+}
 message DeleteTagResponse{}
-*/
+
 
 message GetTagRequest{
    string tag = 1;
@@ -205,7 +210,8 @@ service Chord {
   rpc AddTag(AddTagRequest) returns (AddTagResponse);
 
   rpc GetTag(GetTagRequest) returns (stream GetTagResponse);
-  //rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+  rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+
   /*
   Dado un nombre de un fichero y una ID de un nodo devue
   */

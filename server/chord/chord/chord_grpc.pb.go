@@ -50,6 +50,7 @@ type ChordClient interface {
 	//Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
 	AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error)
 	GetTag(ctx context.Context, in *GetTagRequest, opts ...grpc.CallOption) (Chord_GetTagClient, error)
+	DeleteTag(ctx context.Context, in *DeleteTagRequest, opts ...grpc.CallOption) (*DeleteTagResponse, error)
 	// Get recupera el valor asociado a la clave.
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	// Set almacena un par <clave, valor>.
@@ -203,6 +204,15 @@ func (x *chordGetTagClient) Recv() (*GetTagResponse, error) {
 	return m, nil
 }
 
+func (c *chordClient) DeleteTag(ctx context.Context, in *DeleteTagRequest, opts ...grpc.CallOption) (*DeleteTagResponse, error) {
+	out := new(DeleteTagResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/DeleteTag", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chordClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
 	out := new(GetResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/Get", in, out, opts...)
@@ -289,6 +299,7 @@ type ChordServer interface {
 	//Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
 	AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error)
 	GetTag(*GetTagRequest, Chord_GetTagServer) error
+	DeleteTag(context.Context, *DeleteTagRequest) (*DeleteTagResponse, error)
 	// Get recupera el valor asociado a la clave.
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	// Set almacena un par <clave, valor>.
@@ -343,6 +354,9 @@ func (UnimplementedChordServer) AddTag(context.Context, *AddTagRequest) (*AddTag
 }
 func (UnimplementedChordServer) GetTag(*GetTagRequest, Chord_GetTagServer) error {
 	return status.Errorf(codes.Unimplemented, "method GetTag not implemented")
+}
+func (UnimplementedChordServer) DeleteTag(context.Context, *DeleteTagRequest) (*DeleteTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteTag not implemented")
 }
 func (UnimplementedChordServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
@@ -594,6 +608,24 @@ func (x *chordGetTagServer) Send(m *GetTagResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
+func _Chord_DeleteTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteTagRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).DeleteTag(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chord.Chord/DeleteTag",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).DeleteTag(ctx, req.(*DeleteTagRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Chord_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(GetRequest)
 	if err := dec(in); err != nil {
@@ -752,6 +784,10 @@ var Chord_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "AddTag",
 			Handler:    _Chord_AddTag_Handler,
+		},
+		{
+			MethodName: "DeleteTag",
+			Handler:    _Chord_DeleteTag_Handler,
 		},
 		{
 			MethodName: "Get",

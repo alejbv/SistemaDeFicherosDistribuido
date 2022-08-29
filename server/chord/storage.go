@@ -16,9 +16,11 @@ type Storage interface {
 	Get(string) ([]byte, error)
 	//Set(string, []byte) error
 	Set(*chord.TagFile) error
+	Delete(string, string) error
+
 	SetTag(string, string, string, *chord.Node) error
 	GetTag(string) ([]TagEncoding, error)
-	Delete(string, string) error
+	DeleteTag(string, string, string) error
 
 	/*
 		GetWithLock(string, string) ([]byte, error)
@@ -232,6 +234,68 @@ func (dictionary *DiskDictionary) GetTag(tag string) ([]TagEncoding, error) {
 	}
 
 	return save, nil
+}
+func (dictionary *DiskDictionary) DeleteTag(tag, fileName, fileExtension string) error {
+
+	log.Debugf("Recuperando la informacion relacionada a la etiqueta: %s\n Para despues eliminar la relacionada al fichero %s", tag, fileName)
+	// Creando el directorio
+	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
+
+		log.Errorf("No existe el directorio: %s\n", tag)
+		return status.Error(codes.Internal, "No existe el directorio: "+tag)
+
+	}
+	// Path del archivo
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+	fileDir := dictionary.Path + "tags/" + tag
+	// La lista de la informacion a almacenar
+	var save []TagEncoding
+
+	// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
+	// En caso de que eso ocurriera, se guarda en save los archivos previos
+	if isThere := FileIsThere(filePath); isThere {
+		jsonInfo, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON", err)
+			return status.Error(codes.Internal, "No se pudo abrir el JSON")
+		}
+		err = json.Unmarshal(jsonInfo, &save)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON: %v\n", err)
+			return status.Error(codes.Internal, "No se pudo abrir el archivo")
+		}
+		if len(save) == 0 {
+			log.Errorf("El JSON esta vacio")
+			os.RemoveAll(fileDir)
+			os.Remove(fileDir)
+			return status.Error(codes.Internal, "El JSON esta vacio")
+		}
+		var temp []TagEncoding
+		for _, value := range save {
+			// Si es el archivo adecuado se ignora
+			if value.FileName == fileName && value.FileExtension == fileExtension {
+				continue
+
+				// En otro caso se almacena
+			} else {
+				temp = append(temp, value)
+			}
+		}
+
+		Cjson, err := json.MarshalIndent(&save, "", "  ")
+		if err != nil {
+			log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
+			return status.Error(codes.Internal, "No se pudo modificar el archivo")
+		}
+
+		return ioutil.WriteFile(filePath, Cjson, 0644)
+		// En caso de que la carpeta este vacia
+	} else {
+		log.Errorf("No existe un JSON dentro de la carpeta: %s\n ", tag)
+		return status.Error(codes.Internal, "No existe un JSON dentro de la carpeta:"+tag+"\n")
+
+	}
+
 }
 
 /*
