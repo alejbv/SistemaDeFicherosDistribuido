@@ -41,8 +41,15 @@ type ChordClient interface {
 	//las etiquetas contenidas en tag-list
 	AddFile(ctx context.Context, in *AddFileRequest, opts ...grpc.CallOption) (*AddFileResponse, error)
 	//
-	//Dado un nombre de un fichero y una ID de un nodo devue
+	//Manda a eliminar todos los archivos que cumplen con una determinada query
+	DeleteFileByQuery(ctx context.Context, in *DeleteFileByQueryRequest, opts ...grpc.CallOption) (*DeleteFileByQueryResponse, error)
+	//
+	//Manda a eliminar un archivo
+	DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error)
+	//
+	//Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
 	AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error)
+	GetTag(ctx context.Context, in *GetTagRequest, opts ...grpc.CallOption) (Chord_GetTagClient, error)
 	// Get recupera el valor asociado a la clave.
 	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
 	// Set almacena un par <clave, valor>.
@@ -137,6 +144,24 @@ func (c *chordClient) AddFile(ctx context.Context, in *AddFileRequest, opts ...g
 	return out, nil
 }
 
+func (c *chordClient) DeleteFileByQuery(ctx context.Context, in *DeleteFileByQueryRequest, opts ...grpc.CallOption) (*DeleteFileByQueryResponse, error) {
+	out := new(DeleteFileByQueryResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/DeleteFileByQuery", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *chordClient) DeleteFile(ctx context.Context, in *DeleteFileRequest, opts ...grpc.CallOption) (*DeleteFileResponse, error) {
+	out := new(DeleteFileResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/DeleteFile", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *chordClient) AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error) {
 	out := new(AddTagResponse)
 	err := c.cc.Invoke(ctx, "/chord.Chord/AddTag", in, out, opts...)
@@ -144,6 +169,38 @@ func (c *chordClient) AddTag(ctx context.Context, in *AddTagRequest, opts ...grp
 		return nil, err
 	}
 	return out, nil
+}
+
+func (c *chordClient) GetTag(ctx context.Context, in *GetTagRequest, opts ...grpc.CallOption) (Chord_GetTagClient, error) {
+	stream, err := c.cc.NewStream(ctx, &Chord_ServiceDesc.Streams[0], "/chord.Chord/GetTag", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &chordGetTagClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type Chord_GetTagClient interface {
+	Recv() (*GetTagResponse, error)
+	grpc.ClientStream
+}
+
+type chordGetTagClient struct {
+	grpc.ClientStream
+}
+
+func (x *chordGetTagClient) Recv() (*GetTagResponse, error) {
+	m := new(GetTagResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
 }
 
 func (c *chordClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
@@ -223,8 +280,15 @@ type ChordServer interface {
 	//las etiquetas contenidas en tag-list
 	AddFile(context.Context, *AddFileRequest) (*AddFileResponse, error)
 	//
-	//Dado un nombre de un fichero y una ID de un nodo devue
+	//Manda a eliminar todos los archivos que cumplen con una determinada query
+	DeleteFileByQuery(context.Context, *DeleteFileByQueryRequest) (*DeleteFileByQueryResponse, error)
+	//
+	//Manda a eliminar un archivo
+	DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponse, error)
+	//
+	//Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
 	AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error)
+	GetTag(*GetTagRequest, Chord_GetTagServer) error
 	// Get recupera el valor asociado a la clave.
 	Get(context.Context, *GetRequest) (*GetResponse, error)
 	// Set almacena un par <clave, valor>.
@@ -268,8 +332,17 @@ func (UnimplementedChordServer) Check(context.Context, *CheckRequest) (*CheckRes
 func (UnimplementedChordServer) AddFile(context.Context, *AddFileRequest) (*AddFileResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddFile not implemented")
 }
+func (UnimplementedChordServer) DeleteFileByQuery(context.Context, *DeleteFileByQueryRequest) (*DeleteFileByQueryResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFileByQuery not implemented")
+}
+func (UnimplementedChordServer) DeleteFile(context.Context, *DeleteFileRequest) (*DeleteFileResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFile not implemented")
+}
 func (UnimplementedChordServer) AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddTag not implemented")
+}
+func (UnimplementedChordServer) GetTag(*GetTagRequest, Chord_GetTagServer) error {
+	return status.Errorf(codes.Unimplemented, "method GetTag not implemented")
 }
 func (UnimplementedChordServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
@@ -446,6 +519,42 @@ func _Chord_AddFile_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Chord_DeleteFileByQuery_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteFileByQueryRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).DeleteFileByQuery(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chord.Chord/DeleteFileByQuery",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).DeleteFileByQuery(ctx, req.(*DeleteFileByQueryRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Chord_DeleteFile_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteFileRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ChordServer).DeleteFile(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/chord.Chord/DeleteFile",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ChordServer).DeleteFile(ctx, req.(*DeleteFileRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _Chord_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddTagRequest)
 	if err := dec(in); err != nil {
@@ -462,6 +571,27 @@ func _Chord_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interf
 		return srv.(ChordServer).AddTag(ctx, req.(*AddTagRequest))
 	}
 	return interceptor(ctx, in, info, handler)
+}
+
+func _Chord_GetTag_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(GetTagRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ChordServer).GetTag(m, &chordGetTagServer{stream})
+}
+
+type Chord_GetTagServer interface {
+	Send(*GetTagResponse) error
+	grpc.ServerStream
+}
+
+type chordGetTagServer struct {
+	grpc.ServerStream
+}
+
+func (x *chordGetTagServer) Send(m *GetTagResponse) error {
+	return x.ServerStream.SendMsg(m)
 }
 
 func _Chord_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -612,6 +742,14 @@ var Chord_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Chord_AddFile_Handler,
 		},
 		{
+			MethodName: "DeleteFileByQuery",
+			Handler:    _Chord_DeleteFileByQuery_Handler,
+		},
+		{
+			MethodName: "DeleteFile",
+			Handler:    _Chord_DeleteFile_Handler,
+		},
+		{
 			MethodName: "AddTag",
 			Handler:    _Chord_AddTag_Handler,
 		},
@@ -640,6 +778,12 @@ var Chord_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Chord_Discard_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "GetTag",
+			Handler:       _Chord_GetTag_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "server/proto/chord.proto",
 }

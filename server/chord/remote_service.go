@@ -3,6 +3,7 @@ package chord
 import (
 	"context"
 	"errors"
+	"io"
 	"sync"
 	"time"
 
@@ -35,9 +36,13 @@ type RemoteServices interface {
 
 	// Añade un archivo al almacenamiento local del nodo correspondiente
 	AddFile(node *chord.Node, req *chord.AddFileRequest) error
+
+	// Elimina un fichero del almacenamiento
+	DeleteFile(node *chord.Node, req *chord.DeleteFileRequest) error
 	// Agrega una etiqueta con la respectiva informacion del archivo o los archivos a los que apunta
 	AddTag(node *chord.Node, req *chord.AddTagRequest) error
-
+	// Recupera todo la informacion que tiene un nodo remoto de una etiqueta
+	GetTag(node *chord.Node, req *chord.GetTagRequest) ([]TagEncoding, error)
 	// metodos propios del sistema
 	// Get recupera el valor asociado  a una llave en el almacenamiento de un nodo remoto.
 	Get(node *chord.Node, req *chord.GetRequest) (*chord.GetResponse, error)
@@ -516,6 +521,7 @@ func (services *GRPCServices) AddFile(node *chord.Node, req *chord.AddFileReques
 	return err
 }
 
+// Añade una etiqueta y la informacion del fichero al almacenamiento local
 func (services *GRPCServices) AddTag(node *chord.Node, req *chord.AddTagRequest) error {
 	if node == nil {
 		return errors.New(" No se puede establecer una conexion con un nodo vacio")
@@ -534,4 +540,72 @@ func (services *GRPCServices) AddTag(node *chord.Node, req *chord.AddTagRequest)
 	// Devuelve el resultado de la llamada remota.
 	_, err = remoteNode.AddTag(ctx, req)
 	return err
+}
+
+// DeleteFile elimina unnfichero del almacenamiento de un nodo remoto.
+func (services *GRPCServices) DeleteFile(node *chord.Node, req *chord.DeleteRequest) error {
+	if node == nil {
+		return errors.New("No se puede establecer conexion con un nodo vacio")
+	}
+
+	// Estableciendo conexion con un nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Se devuelve el resultado de la llamada remota
+	_, err = remoteNode.Delete(ctx, req)
+	return err
+}
+func (services *GRPCServices) GetTag(node *chord.Node, req *chord.GetTagRequest) ([]TagEncoding, error) {
+	if node == nil {
+		return nil, errors.New("No se puede establecer conexion con un nodo vacio")
+	}
+
+	// Estableciendo conexion con un nodo remoto
+	remoteNode, err := services.Connect(node.IP + ":" + node.Port)
+	if err != nil {
+		return nil, err
+	}
+
+	// Se obtiene el contexto de la conexion y el tiempo de espera de la request
+	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
+	defer cancel()
+
+	// Se devuelve el resultado de la llamada remota
+	resStream, err := remoteNode.GetTag(ctx, req)
+	if err != nil {
+		return nil, err
+	}
+
+	// Aun hay que transformarlo
+	var target []TagEncoding
+	for {
+		msg, err := resStream.Recv()
+		// No hay mas nada que recibir
+		if err == io.EOF {
+			break
+		}
+		// Hubo problemas, se termina
+		if err != nil {
+			return nil, err
+		}
+		encoder := msg.Encoder
+		// Creo un objeto temporar TagEncoding para almacenar la informacion recibida
+		temp_file := &TagEncoding{
+			FileName:      encoder.FileName,
+			FileExtension: encoder.FileExtension,
+			NodeID:        []byte(encoder.NodeID),
+			NodeIP:        encoder.NodeIP,
+			NodePort:      encoder.NodePort,
+		}
+		target = append(target, *temp_file)
+	}
+
+	return target, nil
 }

@@ -19,6 +19,14 @@ message TagFile{
   repeated string tags = 4;    
 }
 
+message TagEncoder{
+  string FileName = 1;
+  string FileExtension =2;
+  string NodeID =3;
+  string NodeIP =4;
+  string NodePort =5;
+}
+
 
 // Las Request vacias
 message GetPredecessorRequest{}
@@ -136,17 +144,29 @@ message AddTagRequest{
 }
 message AddTagResponse{}
 
-/*
+
 message DeleteFileRequest{
     string FileName = 1;
     string FileExtension = 2;
     bool   Replica = 3;
 }
 message DeleteFileResponse{}
-
+/*
 message DeleteTagRequest{}
 message DeleteTagResponse{}
 */
+
+message GetTagRequest{
+   string tag = 1;
+}
+message GetTagResponse{
+  TagEncoder Encoder = 1;
+}
+
+message DeleteFileByQueryRequest{
+  repeated string tag = 1;
+}
+message DeleteFileByQueryResponse{}
 // Chord service for inter-node communication.
 service Chord {
   // GetPredecessor devuelve el nodo que se cree que es el predecesor.
@@ -170,15 +190,21 @@ service Chord {
     las etiquetas contenidas en tag-list
     */
   rpc AddFile(AddFileRequest) returns (AddFileResponse);
+
+  /*
+  Manda a eliminar todos los archivos que cumplen con una determinada query
+  */
+  rpc DeleteFileByQuery(DeleteFileByQueryRequest) returns (DeleteFileByQueryResponse);
   /*
    Manda a eliminar un archivo
   */
-  //rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
   /*
     Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
   */
   rpc AddTag(AddTagRequest) returns (AddTagResponse);
 
+  rpc GetTag(GetTagRequest) returns (stream GetTagResponse);
   //rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
   /*
   Dado un nombre de un fichero y una ID de un nodo devue
