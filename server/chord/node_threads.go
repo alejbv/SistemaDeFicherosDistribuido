@@ -1,6 +1,8 @@
 package chord
 
 import (
+	"encoding/json"
+	"strings"
 	"time"
 
 	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord/chord"
@@ -468,7 +470,8 @@ el nodo es este nodo o su predecesor, entonces no hay problema.
 En otro caso esta mal localizada y por tanto debe ser reubicada y eliminada
 */
 // Este es un metodo a tener en cuenta
-func (node *Node) FixStorage(key string) {
+func (node *Node) FixTagStorage(key string) {
+
 	//Bloquea el predecesor para leer de el, lo desbloquea al terminar
 	node.predLock.RLock()
 	pred := node.predecessor
@@ -477,7 +480,7 @@ func (node *Node) FixStorage(key string) {
 	// Localiza el nodo al que le corresponde la clave
 	keyNode, err := node.LocateKey(key)
 	if err != nil {
-		log.Errorf("Error arreglando el diccionario de almacenamiento local .\n%s", err.Error())
+		log.Errorf("Error arreglando las etiquetas en el almacenamiento local .\n%s", err.Error())
 		return
 	}
 
@@ -486,7 +489,82 @@ func (node *Node) FixStorage(key string) {
 		// Bloquea el diccionario para leer de el, lo desbloquea al terminar
 		node.dictLock.RLock()
 		// Consigue el valor asociado a esta llave
-		value, err := node.dictionary.Get(key)
+		value, err := node.dictionary.GetTag(key)
+		node.dictLock.RUnlock()
+		if err != nil {
+			/*
+				En este caso no se reporta el error, porque la clave ya no esta aqui.Por lo
+				que no es necesario reubicarlo.
+			*/
+			return
+		}
+
+		encod, _ := json.MarshalIndent(value, "", " ")
+		var mapa map[string][]byte
+		mapa[key] = encod
+
+		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar
+		node.dictLock.Lock()
+		// Elimina la llave del almacenamiento local
+		err = node.dictionary.DeleteTag(key)
+		node.dictLock.Unlock()
+		if err != nil {
+			log.Errorf("Error eliminando la etiqueta %s en el almacenamiento local.\n%s", key, err.Error())
+			return
+		}
+
+		// Establece este par <key, value> en el nodo correspondiente
+		err = node.RPC.Extend(keyNode, &chord.ExtendRequest{Tags: mapa, Files: nil})
+		if err != nil {
+			log.Errorf("Error reubicando la llave  %s a %s.\n%s", key, keyNode.IP, err.Error())
+			/*
+				En caso de error, reinserta la llave en este nodo, para prevenir
+				la perdidad de informacion.
+			*/
+			// Bloquea el diccionario para escribir en el, desbloquea al terminar
+			node.dictLock.Lock()
+			// Reinserta la clave en el almacenamiento local
+			err = node.dictionary.ExtendTags(mapa)
+			node.dictLock.Unlock()
+			if err != nil {
+				log.Errorf("Error reinsertando la llave %s en el almacenamiento local .\n%s", keyNode.IP, err.Error())
+				return
+			}
+			return
+		}
+	}
+}
+
+/*
+FixStorage arregla la localizacon de  una llave en particular dentro del
+diccionario de almacenamiento. Para eso localiza el nodo  correspondiente. Si
+el nodo es este nodo o su predecesor, entonces no hay problema.
+En otro caso esta mal localizada y por tanto debe ser reubicada y eliminada
+*/
+// Este es un metodo a tener en cuenta
+func (node *Node) FixFileStorage(key string) {
+	//Bloquea el predecesor para leer de el, lo desbloquea al terminar
+	chain := strings.Split(key, "-")
+	fileName := strings.Join(chain[:len(chain)-1], "-")
+	fileExtension := chain[len(chain)-1]
+
+	node.predLock.RLock()
+	pred := node.predecessor
+	node.predLock.RUnlock()
+
+	// Localiza el nodo al que le corresponde la clave
+	keyNode, err := node.LocateKey(fileName)
+	if err != nil {
+		log.Errorf("Error arreglando el almacenamiento local: No se pudo localizar el nodo adecuado .\n%s", err.Error())
+		return
+	}
+
+	// Si el nodo obtenido es distinto a el nodo actual o su predecesor, entonces esta mal ubicado
+	if !Equals(keyNode.ID, node.ID) && !Equals(keyNode.ID, pred.ID) {
+		// Bloquea el diccionario para leer de el, lo desbloquea al terminar
+		node.dictLock.RLock()
+		// Consigue el valor asociado a esta llave
+		value, tags, err := node.dictionary.GetFile(fileName, fileExtension)
 		node.dictLock.RUnlock()
 		if err != nil {
 			/*
@@ -499,15 +577,21 @@ func (node *Node) FixStorage(key string) {
 		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar
 		node.dictLock.Lock()
 		// Elimina la llave del almacenamiento local
-		err = node.dictionary.Delete(key)
+		err = node.dictionary.DeleteFile(fileName, fileExtension)
 		node.dictLock.Unlock()
 		if err != nil {
-			log.Errorf("Error eliminando la llave %s en el almacenamiento local.\n%s", keyNode.IP, err.Error())
+			log.Errorf("Error eliminando el fichero %s en el almacenamiento local.\n%s", fileName, err.Error())
 			return
+		}
+		tagFile := &chord.TagFile{
+			Name:      fileName,
+			Extension: fileExtension,
+			File:      value,
+			Tags:      tags,
 		}
 
 		// Establece este par <key, value> en el nodo correspondiente
-		err = node.RPC.Set(keyNode, &chord.SetRequest{Key: key, Value: value})
+		err = node.RPC.Extend(keyNode, &chord.ExtendRequest{Tags: nil, Files: []*chord.TagFile{tagFile}})
 		if err != nil {
 			log.Errorf("Error reubicando la llave  %s a %s.\n%s", key, keyNode.IP, err.Error())
 			/*
@@ -517,7 +601,7 @@ func (node *Node) FixStorage(key string) {
 			// Bloquea el diccionario para escribir en el, desbloquea al terminar
 			node.dictLock.Lock()
 			// Reinserta la clave en el almacenamiento local
-			err = node.dictionary.Set(key, value)
+			err = node.dictionary.SetFile(tagFile)
 			node.dictLock.Unlock()
 			if err != nil {
 				log.Errorf("Error reinsertando la llave %s en el almacenamiento local .\n%s", keyNode.IP, err.Error())
@@ -525,6 +609,25 @@ func (node *Node) FixStorage(key string) {
 			}
 			return
 		}
+
+		/*
+			Como esto se llama para arreglar la replicacion, pero se deja comentado por si acaso
+			// Una vez que el archivo se movio adecuadamente paso a modificar el cambio que hubo
+			for _, tag := range tags {
+				// Se crea un nuevo objeto TagEncoder que va a tener la informacion a modificar
+				encoder := &chord.TagEncoder{
+					FileName:      fileName,
+					FileExtension: fileExtension,
+					NodeID:        keyNode.ID,
+					NodeIP:        keyNode.IP,
+					NodePort:      keyNode.Port,
+				}
+				// Se genera la request
+				req := &chord.EditFileFromTagRequest{Tag: tag, Mod: encoder}
+				// Por cada una de las etiquetas se modificia
+				go node.RPC.EditFileFromTag(keyNode, req)
+			}
+		*/
 	}
 }
 
@@ -533,9 +636,11 @@ func (node *Node) FixStorage(key string) {
 func (node *Node) PeriodicallyFixStorage() {
 	log.Debug("Hilo para arreglar el almacenamiento empezado.")
 	// Indice de la llave actual para arreglar.
-	next := 0
+	nextFile := 0
+	nextTag := 0
 	// Llaves a arreglar
-	keys := make([]string, 0)
+	var keysTags []string
+	var keysFiles []string
 	// Establece el tiempo entre reactivacion de las rutinas
 	ticker := time.NewTicker(500 * time.Millisecond)
 	for {
@@ -547,7 +652,7 @@ func (node *Node) PeriodicallyFixStorage() {
 			// Si es tiempo arregla el almacenamiento actual
 		case <-ticker.C:
 			// Si no hay mas claves para arreglar
-			if next == len(keys) {
+			if nextFile == len(keysFiles) && nextTag == len(keysTags) {
 				// Bloquea el predecesor para leer de el, desbloquealo al terminar
 				node.predLock.RLock()
 				pred := node.predecessor
@@ -556,26 +661,48 @@ func (node *Node) PeriodicallyFixStorage() {
 				// Bloquea el diccionario para leer de el, desbloquealo al terminar
 				node.dictLock.RLock()
 				// Obtener el diccionario de las llaves replicadas
-				_, out, err := node.dictionary.Partition(pred.ID, node.ID)
+				_, outTags, err := node.dictionary.PartitionTag(pred.ID, node.ID)
 				node.dictLock.RUnlock()
 				if err != nil {
 					log.Errorf("Error arreglando el diccionario de almacenamiento local: "+
-						"No se puede obtener las llaves replicadas de este nodo.\n%s", err.Error())
+						"No se puede obtener las etiquetas replicadas de este nodo.\n%s", err.Error())
+					continue
+				}
+				_, outFiles, err := node.dictionary.PartitionFile(pred.ID, node.ID)
+				node.dictLock.RUnlock()
+				if err != nil {
+					log.Errorf("Error arreglando el diccionario de almacenamiento local: "+
+						"No se puede obtener los archivos replicados de este nodo.\n%s", err.Error())
 					continue
 				}
 
-				// Obtener las llaves replicadas
-				keys = Keys(out)
+				// Obtener las etiquetas  replicadas
+				keysTags = Keys(outTags)
+
+				// Obtener los archivos replicados
+
+				for _, file := range outFiles {
+					keysFiles = append(keysFiles, file.Name+"-"+file.Extension)
+				}
 				// Restablece el indice de la llave a arreglar.
-				next = 0
+
+				nextFile = 0
+				nextTag = 0
 			}
 
-			// Si quedan llaves por arreglar
-			if next < len(keys) {
-				// Arregla la llave correspondiente
-				node.FixStorage(keys[next])
-				// Actualiza el indicie de la llave a arreglar
-				next++
+			// Si quedan etiquetas por arreglar
+			if nextTag < len(keysTags) {
+				// Arregla la etiqueta correspondiente
+				node.FixTagStorage(keysTags[nextTag])
+				// Actualiza el indicie de la etiqueta a arreglar
+				nextTag++
+			}
+
+			if nextFile < len(keysFiles) {
+				// Arregla el archvio correspondiente
+				node.FixFileStorage(keysFiles[nextFile])
+				// Actualiza el indicie del archivo a arreglar
+				nextFile++
 			}
 		}
 	}

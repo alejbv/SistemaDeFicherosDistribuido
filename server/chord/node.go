@@ -240,7 +240,9 @@ func (node *Node) Extend(ctx context.Context, req *chord.ExtendRequest) (*chord.
 
 	// Bloquea el diccionario para escribir en el , al terminar se desbloquea
 	node.dictLock.Lock()
-	err1 := node.dictionary.ExtendFiles(req.Files) // Agrega los pares <key, value> al almacenamiento.
+	// Agrega los nuevos archivos al almacenamiento.
+	err1 := node.dictionary.ExtendFiles(req.Files)
+	// Agrega las nuevas etiquetas al almacenamiento.
 	err2 := node.dictionary.ExtendTags(req.Tags)
 	node.dictLock.Unlock()
 	if err1 != nil {

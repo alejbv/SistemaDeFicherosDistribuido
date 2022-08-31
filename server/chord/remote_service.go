@@ -61,7 +61,7 @@ type RemoteServices interface {
 	// Modifica la informacion almacenada por un etiqueta sobre uno de sus archivos
 	EditFileFromTag(node *chord.Node, req *chord.EditFileFromTagRequest) error
 
-	// Extend  exitiende el diccionario de almacenamiento de un nodo remoto con una lista de pares <key, values>.
+	// Extend  extiende el diccionario de almacenamiento de un nodo remoto con una lista de pares <key, values>.
 	Extend(node *chord.Node, req *chord.ExtendRequest) error
 
 	// Partition  devuelve todos los pares <key, values> en un intervalo dado, del almacenamiento de un nodo remoto

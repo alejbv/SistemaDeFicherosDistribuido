@@ -15,25 +15,62 @@ import (
 )
 
 type Storage interface {
+	// Recupera la informacion almacenada de un archivo y las etiquetas que lo identifican
 	GetFile(string, string) ([]byte, []string, error)
+
+	// Almacena localmente un nuevo archivo
 	SetFile(*chord.TagFile) error
+
+	// Elimina un archivo local
 	DeleteFile(string, string) error
+
+	// Particiona los archivos almacenados localmente en 2 dependiedo si se ubican o no dentro de un
+	// Determinado rango
 	PartitionFile([]byte, []byte) ([]*chord.TagFile, []*chord.TagFile, error)
+
+	// Agrega una lista nueva de archivos al almacenamiento local
 	ExtendFiles([]*chord.TagFile) error
+
+	// Elimina un conjunto de archviso
 	DiscardFiles([]string) error
 
+	/*
+	   				Metodos de las etiquetas
+	   ==============================================================================================
+	*/
+
+	// Agrega a la informacion almacenada de una determinada etiqueta una referencia a un nuevo archivo
 	SetTag(string, string, string, *chord.Node) error
+
+	// Recupera la informacion que almacena una etiqueta
 	GetTag(string) ([]TagEncoding, error)
+
+	// Elimina la informacion de una etiqueta
 	DeleteTag(string) error
+
+	// Particiona las etiquetas almacenadas localmente en 2 dependiedo si se ubican o no dentro de un
+	// Determinado rango
 	PartitionTag([]byte, []byte) (map[string][]byte, map[string][]byte, error)
+
+	// Elimina la informacion de un archivo de una etiqueta
 	DeleteFileFromTag(string, string, string) error
+
+	// Agrega un nuevo conjunto de etiqueta al almacenamiento local
 	ExtendTags(map[string][]byte) error
+
+	// Elimina un conjunto de etiquetas
 	DiscardTags([]string) error
+
+	// Modifica la informacion de un archivo de una etiqueta
 	EditFileFromTag(string, *chord.TagEncoder) error
 
+	// Se obtiene el path local donde se trabaja
 	GetPath() string
+
+	// Pertite cambiar el path
 	ChangePath(string)
 
+	// Elimina toda la informacion almacenada localmente
 	Clear() error
 }
 type DiskDictionary struct {
@@ -487,6 +524,11 @@ func (dictionary *DiskDictionary) PartitionFile(L, R []byte) ([]*chord.TagFile, 
 }
 
 func (dictionary *DiskDictionary) ExtendTags(data map[string][]byte) error {
+
+	if data == nil {
+		return nil
+	}
+
 	for key, value := range data {
 		log.Debugf("Guardando la informacion relacionada a la etiqueta: %s\n", key)
 		// Creando el directorio
@@ -510,6 +552,10 @@ func (dictionary *DiskDictionary) ExtendTags(data map[string][]byte) error {
 }
 
 func (dictionary *DiskDictionary) ExtendFiles(data []*chord.TagFile) error {
+	if data == nil {
+		return nil
+	}
+
 	for _, value := range data {
 		err := dictionary.SetFile(value)
 		if err != nil {
