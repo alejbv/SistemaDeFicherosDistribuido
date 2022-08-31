@@ -51,13 +51,8 @@ type ChordClient interface {
 	AddTag(ctx context.Context, in *AddTagRequest, opts ...grpc.CallOption) (*AddTagResponse, error)
 	GetTag(ctx context.Context, in *GetTagRequest, opts ...grpc.CallOption) (Chord_GetTagClient, error)
 	DeleteTag(ctx context.Context, in *DeleteTagRequest, opts ...grpc.CallOption) (*DeleteTagResponse, error)
-	// Get recupera el valor asociado a la clave.
-	Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error)
-	// Set almacena un par <clave, valor>.
-	Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error)
-	// Delete elimina el par <clave, valor> especifico.
-	Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error)
-	// Partition devuelve todos los pares <clave, valor> en el almacenamiento dado  un internal.
+	DeleteFileFromTag(ctx context.Context, in *DeleteFileFromTagRequest, opts ...grpc.CallOption) (*DeleteFileFromTagResponse, error)
+	EditFileFromTag(ctx context.Context, in *EditFileFromTagRequest, opts ...grpc.CallOption) (*EditFileFromTagResponse, error)
 	Partition(ctx context.Context, in *PartitionRequest, opts ...grpc.CallOption) (*PartitionResponse, error)
 	// Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
 	Extend(ctx context.Context, in *ExtendRequest, opts ...grpc.CallOption) (*ExtendResponse, error)
@@ -213,27 +208,18 @@ func (c *chordClient) DeleteTag(ctx context.Context, in *DeleteTagRequest, opts 
 	return out, nil
 }
 
-func (c *chordClient) Get(ctx context.Context, in *GetRequest, opts ...grpc.CallOption) (*GetResponse, error) {
-	out := new(GetResponse)
-	err := c.cc.Invoke(ctx, "/chord.Chord/Get", in, out, opts...)
+func (c *chordClient) DeleteFileFromTag(ctx context.Context, in *DeleteFileFromTagRequest, opts ...grpc.CallOption) (*DeleteFileFromTagResponse, error) {
+	out := new(DeleteFileFromTagResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/DeleteFileFromTag", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
 	return out, nil
 }
 
-func (c *chordClient) Set(ctx context.Context, in *SetRequest, opts ...grpc.CallOption) (*SetResponse, error) {
-	out := new(SetResponse)
-	err := c.cc.Invoke(ctx, "/chord.Chord/Set", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *chordClient) Delete(ctx context.Context, in *DeleteRequest, opts ...grpc.CallOption) (*DeleteResponse, error) {
-	out := new(DeleteResponse)
-	err := c.cc.Invoke(ctx, "/chord.Chord/Delete", in, out, opts...)
+func (c *chordClient) EditFileFromTag(ctx context.Context, in *EditFileFromTagRequest, opts ...grpc.CallOption) (*EditFileFromTagResponse, error) {
+	out := new(EditFileFromTagResponse)
+	err := c.cc.Invoke(ctx, "/chord.Chord/EditFileFromTag", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -300,13 +286,8 @@ type ChordServer interface {
 	AddTag(context.Context, *AddTagRequest) (*AddTagResponse, error)
 	GetTag(*GetTagRequest, Chord_GetTagServer) error
 	DeleteTag(context.Context, *DeleteTagRequest) (*DeleteTagResponse, error)
-	// Get recupera el valor asociado a la clave.
-	Get(context.Context, *GetRequest) (*GetResponse, error)
-	// Set almacena un par <clave, valor>.
-	Set(context.Context, *SetRequest) (*SetResponse, error)
-	// Delete elimina el par <clave, valor> especifico.
-	Delete(context.Context, *DeleteRequest) (*DeleteResponse, error)
-	// Partition devuelve todos los pares <clave, valor> en el almacenamiento dado  un internal.
+	DeleteFileFromTag(context.Context, *DeleteFileFromTagRequest) (*DeleteFileFromTagResponse, error)
+	EditFileFromTag(context.Context, *EditFileFromTagRequest) (*EditFileFromTagResponse, error)
 	Partition(context.Context, *PartitionRequest) (*PartitionResponse, error)
 	// Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
 	Extend(context.Context, *ExtendRequest) (*ExtendResponse, error)
@@ -358,14 +339,11 @@ func (UnimplementedChordServer) GetTag(*GetTagRequest, Chord_GetTagServer) error
 func (UnimplementedChordServer) DeleteTag(context.Context, *DeleteTagRequest) (*DeleteTagResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteTag not implemented")
 }
-func (UnimplementedChordServer) Get(context.Context, *GetRequest) (*GetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedChordServer) DeleteFileFromTag(context.Context, *DeleteFileFromTagRequest) (*DeleteFileFromTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteFileFromTag not implemented")
 }
-func (UnimplementedChordServer) Set(context.Context, *SetRequest) (*SetResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Set not implemented")
-}
-func (UnimplementedChordServer) Delete(context.Context, *DeleteRequest) (*DeleteResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Delete not implemented")
+func (UnimplementedChordServer) EditFileFromTag(context.Context, *EditFileFromTagRequest) (*EditFileFromTagResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method EditFileFromTag not implemented")
 }
 func (UnimplementedChordServer) Partition(context.Context, *PartitionRequest) (*PartitionResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Partition not implemented")
@@ -626,56 +604,38 @@ func _Chord_DeleteTag_Handler(srv interface{}, ctx context.Context, dec func(int
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Chord_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GetRequest)
+func _Chord_DeleteFileFromTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeleteFileFromTagRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChordServer).Get(ctx, in)
+		return srv.(ChordServer).DeleteFileFromTag(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/chord.Chord/Get",
+		FullMethod: "/chord.Chord/DeleteFileFromTag",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).Get(ctx, req.(*GetRequest))
+		return srv.(ChordServer).DeleteFileFromTag(ctx, req.(*DeleteFileFromTagRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Chord_Set_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(SetRequest)
+func _Chord_EditFileFromTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EditFileFromTagRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(ChordServer).Set(ctx, in)
+		return srv.(ChordServer).EditFileFromTag(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/chord.Chord/Set",
+		FullMethod: "/chord.Chord/EditFileFromTag",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).Set(ctx, req.(*SetRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _Chord_Delete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(DeleteRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(ChordServer).Delete(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/chord.Chord/Delete",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(ChordServer).Delete(ctx, req.(*DeleteRequest))
+		return srv.(ChordServer).EditFileFromTag(ctx, req.(*EditFileFromTagRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -790,16 +750,12 @@ var Chord_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _Chord_DeleteTag_Handler,
 		},
 		{
-			MethodName: "Get",
-			Handler:    _Chord_Get_Handler,
+			MethodName: "DeleteFileFromTag",
+			Handler:    _Chord_DeleteFileFromTag_Handler,
 		},
 		{
-			MethodName: "Set",
-			Handler:    _Chord_Set_Handler,
-		},
-		{
-			MethodName: "Delete",
-			Handler:    _Chord_Delete_Handler,
+			MethodName: "EditFileFromTag",
+			Handler:    _Chord_EditFileFromTag_Handler,
 		},
 		{
 			MethodName: "Partition",

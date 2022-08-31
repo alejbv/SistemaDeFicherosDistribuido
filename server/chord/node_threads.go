@@ -99,8 +99,40 @@ func (node *Node) CheckPredecessor() {
 			node.predLock.Lock()
 			node.predecessor = node.Node
 			node.predLock.Unlock()
-			// Si existia un predecesor viejo, absorce sus llaves.
-			go node.AbsorbPredecessorKeys(pred)
+			// Si existia un predecesor viejo, absorve sus llaves.
+			//go node.AbsorbPredecessorKeys(pred)
+			/*
+				Posible modificacion
+			*/
+			intersectionFiles, _, _ := node.dictionary.PartitionFile(pred.ID, node.ID)
+			go func() {
+
+				node.AbsorbPredecessorKeys(pred)
+				log.Debug("Se les va a notificar a las etiquetas que hubo un cambio en la ubicacion de unos archivos.")
+				// Se recorre cada archivo
+				for _, files := range intersectionFiles {
+					tags := files.Tags
+
+					// Se recorre cada etiqueta
+					for _, tag := range tags {
+						// Se Genera una request para editar las etiquetas
+						enc := &chord.TagEncoder{
+							FileName:      files.Name,
+							FileExtension: files.Extension,
+							NodeID:        pred.ID,
+							NodeIP:        pred.IP,
+							NodePort:      pred.Port,
+						}
+
+						req := &chord.EditFileFromTagRequest{Tag: tag, Mod: enc}
+
+						go node.RPC.EditFileFromTag(node.Node, req)
+					}
+
+				}
+
+			}()
+			// Hasta aqui se extiende la modificacion
 		} else {
 			log.Trace("Predecesor Activo.")
 		}
@@ -184,7 +216,7 @@ func (node *Node) CheckSuccessor() {
 	}
 
 	// En otro caso reporta que hay un nuevo sucesor.
-	log.Debugf("Sucesor actualizado al nod en %s\n.", suc.IP)
+	log.Debugf("Sucesor actualizado al nodo en %s\n.", suc.IP)
 
 	// Actualiza el nuevo sucesor replicando las llaves de este nodo.
 	go node.UpdateSuccessorKeys()
@@ -430,11 +462,12 @@ func (node *Node) PeriodicallyFixSuccessor() {
 
 // Posible Metodo a modificar
 /*
-FixStorage arregla la  localizacon de  una llave en particular dentro del
-diccionario de almacenamiento. Para eso localiza el nodo  que le correspondiente. Si
+FixStorage arregla la localizacon de  una llave en particular dentro del
+diccionario de almacenamiento. Para eso localiza el nodo  correspondiente. Si
 el nodo es este nodo o su predecesor, entonces no hay problema.
 En otro caso esta mal localizada y por tanto debe ser reubicada y eliminada
 */
+// Este es un metodo a tener en cuenta
 func (node *Node) FixStorage(key string) {
 	//Bloquea el predecesor para leer de el, lo desbloquea al terminar
 	node.predLock.RLock()
@@ -469,7 +502,7 @@ func (node *Node) FixStorage(key string) {
 		err = node.dictionary.Delete(key)
 		node.dictLock.Unlock()
 		if err != nil {
-			log.Errorf("Error eliminando la llave %s en el almacenamient local.\n%s", keyNode.IP, err.Error())
+			log.Errorf("Error eliminando la llave %s en el almacenamiento local.\n%s", keyNode.IP, err.Error())
 			return
 		}
 

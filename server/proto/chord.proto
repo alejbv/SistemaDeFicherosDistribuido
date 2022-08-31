@@ -19,14 +19,14 @@ message TagFile{
   repeated string tags = 4;    
 }
 
+
 message TagEncoder{
   string FileName = 1;
   string FileExtension =2;
-  string NodeID =3;
+  bytes  NodeID =3;
   string NodeIP =4;
   string NodePort =5;
 }
-
 
 // Las Request vacias
 message GetPredecessorRequest{}
@@ -101,12 +101,14 @@ message DeleteRequest {
 
 // ExtendRequest contains the <key, value> pairs to set on the storage.
 message ExtendRequest {
-  map<string, bytes> dictionary = 1;
+  repeated TagFile    Files = 1;
+  map<string, bytes>  Tags  = 2;
 }
 
 // DiscardRequest contains the lower and upper bound of the interval storage to delete.
 message DiscardRequest {
-  repeated string keys = 1;
+  repeated string Tags = 1;
+  repeated string Files =2;
 }
 
 // Otras Respuestas
@@ -116,10 +118,19 @@ message GetResponse {
 }
 // PartitionResponse contains the contains the <key, value> pairs to return.
 message PartitionResponse {
-  map<string, bytes> in = 1;
-  map<string, bytes> out = 2;
+  repeated TagFile    InFiles  = 1;
+  repeated TagFile    OutFiles = 2;
+  map<string, bytes>  InTags   = 3;
+  map<string, bytes>  OutTags  = 4;
 }
 
+message EditFileFromTagRequest {
+  string Tag = 1;
+  TagEncoder Mod = 2;
+
+}
+
+message EditFileFromTagResponse{}
 
 // Ficheros Mensajes
 
@@ -152,14 +163,19 @@ message DeleteFileRequest{
 }
 message DeleteFileResponse{}
 
-message DeleteTagRequest{
+message DeleteFileFromTagRequest{
     string Tag = 1;
     string FileName = 2;
     string FileExtension = 3;
     bool Replica = 4;
 }
-message DeleteTagResponse{}
+message DeleteFileFromTagResponse{}
 
+message DeleteTagRequest{
+  string Tag = 1;
+  bool Replica = 2;
+}
+message DeleteTagResponse{}
 
 message GetTagRequest{
    string tag = 1;
@@ -211,20 +227,10 @@ service Chord {
 
   rpc GetTag(GetTagRequest) returns (stream GetTagResponse);
   rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
-
-  /*
-  Dado un nombre de un fichero y una ID de un nodo devue
-  */
+  rpc DeleteFileFromTag(DeleteFileFromTagRequest) returns (DeleteFileFromTagResponse);
   
-  //rpc GetFile(GetFileRequest) returns (GetFileResponse);
-
-  // Get recupera el valor asociado a la clave.
-  rpc Get(GetRequest) returns (GetResponse);
-  // Set almacena un par <clave, valor>.
-  rpc Set(SetRequest) returns (SetResponse);
-  // Delete elimina el par <clave, valor> especifico.
-  rpc Delete(DeleteRequest) returns (DeleteResponse);
-  // Partition devuelve todos los pares <clave, valor> en el almacenamiento dado  un internal.
+  rpc EditFileFromTag(EditFileFromTagRequest) returns (EditFileFromTagResponse);
+  
   rpc Partition(PartitionRequest) returns (PartitionResponse);
   // Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
   rpc Extend(ExtendRequest) returns (ExtendResponse);

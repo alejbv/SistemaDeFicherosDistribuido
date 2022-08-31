@@ -1,7 +1,6 @@
 package chord
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net"
@@ -165,51 +164,6 @@ func (node *Node) Stop() error {
 	return nil
 }
 
-// Posible Metodo a modificar
-// GetKey recupera el valor asociado con una llave.
-func (node *Node) GetKey(key string, lock bool) ([]byte, error) {
-	//Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
-	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
-	defer cancel()
-
-	log.Info("Resolviendo la request Get.")
-
-	response, err := node.Get(ctx, &chord.GetRequest{Key: key, Lock: lock, IP: node.IP})
-	if err != nil {
-		return nil, err
-	}
-
-	return response.Value, nil
-}
-
-// Posible Metodo a modificar
-// SetKey establece un par <key, value> en el almacenamiento.
-func (node *Node) SetKey(key string, value []byte, lock bool) error {
-	// Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
-	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
-	defer cancel()
-
-	log.Info("Resolviendo la request Set.")
-
-	_, err := node.Set(ctx, &chord.SetRequest{Key: key, Value: value, Lock: lock, IP: node.IP})
-
-	return err
-}
-
-// Posible Metodo a modificar
-// DeleteKey elimina un par  <key, value> del almacenamiento.
-func (node *Node) DeleteKey(key string, lock bool) error {
-	// Se obtiene el contexto de la conexion y se establece el tiempo de espera de la conexion.
-	ctx, cancel := context.WithTimeout(context.Background(), node.config.Timeout)
-	defer cancel()
-
-	log.Info("Resolviendo la request Delete.")
-
-	_, err := node.Delete(ctx, &chord.DeleteRequest{Key: key, Lock: lock, IP: node.IP})
-
-	return err
-}
-
 func (node *Node) Listen() {
 	log.Info("Empezando el servicio en el socket abierto.")
 	err := node.server.Serve(node.sock)
@@ -296,19 +250,19 @@ Para eso, el obtiene el hash de la llave para obtener el correspondiente ID, ent
 el sucesor más cercano a esta ID en el anillo. dado que este es el nodo al que le corresponde la llave
 */
 func (node *Node) LocateKey(key string) (*chord.Node, error) {
-	log.Tracef("Localizando la llave: %s.", key)
+	log.Tracef("Localizando la llave: %s.\n", key)
 
 	// Obteniendo el ID relativo a esta llave
 	id, err := HashKey(key, node.config.Hash)
 	if err != nil {
-		log.Errorf("Error generando la llave: %s.", key)
+		log.Errorf("Error generando la llave: %s.\n", key)
 		return nil, errors.New(fmt.Sprintf("error generando la llave: %s.\n%s", key, err.Error()))
 	}
 
 	// Busca y obtiene el sucesor de esta ID
 	suc, err := node.FindIDSuccessor(id)
 	if err != nil {
-		log.Errorf("Error localizando el sucesor de esta ID: %s.", key)
+		log.Errorf("Error localizando el sucesor de esta ID: %s.\n", key)
 		return nil, errors.New(fmt.Sprintf("error localizando el sucesor de esta ID: %s.\n%s", key, err.Error()))
 	}
 
@@ -318,8 +272,8 @@ func (node *Node) LocateKey(key string) (*chord.Node, error) {
 
 // ClosestFinger busca el nodo mas cercano que precede a esta ID.
 func (node *Node) ClosestFinger(ID []byte) *chord.Node {
-	log.Trace("Buscando el nodo mas cercano que precede a esta ID.")
-	defer log.Trace("Nodo mas cercano encontrado.")
+	log.Trace("Buscando el nodo mas cercano que precede a esta ID.\n")
+	defer log.Trace("Nodo mas cercano encontrado.\n")
 
 	// Itera sobre la finger table en sentido contrario y regresa el nodo mas cercano
 	// tal que su ID este entre la ID del nodo actual y la ID dada.
@@ -339,6 +293,8 @@ func (node *Node) ClosestFinger(ID []byte) *chord.Node {
 
 // Posible Metodo a modificar
 // AbsorbPredecessorKeys agrega las llaves replicadas del anterior predecesor a este nodo.
+
+// Se debe modificar para modificarle a a las llaves la nueva ubicacion del archivo
 func (node *Node) AbsorbPredecessorKeys(old *chord.Node) {
 	// Si el anterior predecesor no es este nodo.
 	if !Equals(old.ID, node.ID) {
@@ -353,20 +309,41 @@ func (node *Node) AbsorbPredecessorKeys(old *chord.Node) {
 		if !Equals(suc.ID, node.ID) {
 			// Bloquea el diccionario para leer de el, al terminar se desbloquea.
 			node.dictLock.RLock()
-			// Obtiene las llaves del predecesor.
-			in, out, err := node.dictionary.Partition(old.ID, node.ID)
+			// Obtiene la informacion de las etiquetas  del predecesor.
+			inFile, outFile, err1 := node.dictionary.PartitionFile(old.ID, node.ID)
+			inTag, outTag, err2 := node.dictionary.PartitionTag(old.ID, node.ID)
 			node.dictLock.RUnlock()
-			if err != nil {
-				log.Errorf("Error obtenido las llaves del anterior predecesor.\n%s", err.Error())
+			if err1 != nil {
+				log.Errorf("Error obtenido los archivos del anterior predecesor.\n%s", err1.Error())
 				return
 			}
 
-			log.Debug("Transferiendo las llaves del predecesor al sucesor.")
-			log.Debugf("Llaves a transferir: %s", Keys(out))
-			log.Debugf("LLaves restantes: %s", Keys(in))
+			if err2 != nil {
+				log.Errorf("Error obtenido las etiquetas del anterior predecesor.\n%s", err2.Error())
+				return
+			}
+			// Se recorren los archivos para obtener el nombre de los que estan fuera del rango
+			var outFileNames []string
+			for _, file := range outFile {
+				outFileNames = append(outFileNames, file.Name)
 
-			// Trasfiere las al nodo sucesor.
-			err = node.RPC.Extend(suc, &chord.ExtendRequest{Dictionary: out})
+			}
+			// Se recorren los archivos para obtener el nombre de los que estan dentro del rango
+			var inFileNames []string
+			for _, file := range inFile {
+				inFileNames = append(inFileNames, file.Name)
+
+			}
+			log.Debug("Transferiendo los archivos de este nodo a su sucesor.")
+			log.Debugf("Archivos a transferir: %s", outFileNames)
+			log.Debugf("Archivos restantes: %s", inFileNames)
+
+			log.Debug("Transferiendo las llaves del predecesor al sucesor.")
+			log.Debugf("Llaves a transferir: %s", Keys(outTag))
+			log.Debugf("LLaves restantes: %s", Keys(inTag))
+
+			// Trasfiere las del predecesor al nodo sucesor.
+			err := node.RPC.Extend(suc, &chord.ExtendRequest{Files: outFile, Tags: outTag})
 			if err != nil {
 				log.Errorf("Error transfiriendo las llaves al sucesor.\n%s", err.Error())
 				return
@@ -377,9 +354,54 @@ func (node *Node) AbsorbPredecessorKeys(old *chord.Node) {
 }
 
 // Posible Metodo a modificar
-// DeletePredecessorKeys elimina las llaves replicadas del viejo sucesor en este nodo.
-// Devuelve las llaves actuales, las replicadas actuales y las eliminadas.
-func (node *Node) DeletePredecessorKeys(old *chord.Node) (map[string][]byte, map[string][]byte, map[string][]byte, error) {
+// DeletePredecessorFiles elimina los archivos replicadoss del viejo sucesor en este nodo.
+// Devuelve los archivos actuales, los replicados actuales y las eliminados.
+func (node *Node) DeletePredecessorFiles(old *chord.Node) ([]*chord.TagFile, []*chord.TagFile, []*chord.TagFile, []*chord.TagFile, error) {
+	//Bloquea el predecesor para leer de el, se desbloquea el terminar
+	node.predLock.Lock()
+	pred := node.predecessor
+	node.predLock.Unlock()
+
+	//Bloquea el diccionario para leer y escribir en el, se desbloquea el terminar la funcion
+	node.dictLock.Lock()
+	defer node.dictLock.Unlock()
+
+	// Obtiene los archivos de la transferir
+	in, out, err := node.dictionary.PartitionFile(pred.ID, node.ID)
+	if err != nil {
+		log.Error("Error obteniendo los archivos correspondientes al nuevo predecesor.")
+		return nil, nil, nil, nil, errors.New("error obteniendo los archivos correspondientes al nuevo predecesor\n" + err.Error())
+	}
+	intersection, _, _ := node.dictionary.PartitionFile(old.ID, pred.ID)
+	// Si el antiguo predecesor es distinto al nodo actual, elimina los archivos del viejo predecesor en este nodo.
+	if !Equals(old.ID, node.ID) {
+		// Obtiene los archivos a eliminar
+		_, deleted, err := node.dictionary.PartitionFile(old.ID, node.ID)
+		if err != nil {
+			log.Error("Error obteniendo los archivos replicados del antiguo predecesor en este nodo.")
+			return nil, nil, nil, nil, errors.New(
+				"error obteniendo los archivos replicado del antiguo predecesor en este nodo\n" + err.Error())
+		}
+
+		// Elimina los archivos del anterior predecesor
+		var keys []string
+		for _, file := range out {
+
+			keys = append(keys, file.Name+"-"+file.Extension)
+		}
+		err = node.dictionary.DiscardFiles(keys)
+		if err != nil {
+			log.Error("Error eliminando las llaves del anterior predecesor en este nodo.")
+			return nil, nil, nil, nil, errors.New("error eliminando las llaves del anterior predecesor en este nodo\n" + err.Error())
+		}
+
+		log.Debug("Eliminacion exitosa de las llaves replicadas del anterior predecesor en este nodo.")
+		return in, out, deleted, intersection, nil
+	}
+	return in, out, nil, intersection, nil
+}
+
+func (node *Node) DeletePredecessorTags(old *chord.Node) (map[string][]byte, map[string][]byte, map[string][]byte, map[string][]byte, error) {
 	//Bloquea el predecesor para leer de el, se desbloquea el terminar
 	node.predLock.Lock()
 	pred := node.predecessor
@@ -390,33 +412,34 @@ func (node *Node) DeletePredecessorKeys(old *chord.Node) (map[string][]byte, map
 	defer node.dictLock.Unlock()
 
 	// Obtiene las llaves a transferir
-	in, out, err := node.dictionary.Partition(pred.ID, node.ID)
+	in, out, err := node.dictionary.PartitionTag(pred.ID, node.ID)
 	if err != nil {
 		log.Error("Error obteniendo las claves correspondientes al nuevo predecesor.")
-		return nil, nil, nil, errors.New("rror obteniendo las claves correspondientes al nuevo predecesor\n" + err.Error())
+		return nil, nil, nil, nil, errors.New("error obteniendo las claves correspondientes al nuevo predecesor\n" + err.Error())
 	}
+	intersection, _, _ := node.dictionary.PartitionTag(old.ID, pred.ID)
 
 	// Si el antiguo predecesor es distinto al nodo actual, elimina las llaves del viejo predecesor en este nodo.
 	if !Equals(old.ID, node.ID) {
 		// Obtiene las llaves a eliminar
-		_, deleted, err := node.dictionary.Partition(old.ID, node.ID)
+		_, deleted, err := node.dictionary.PartitionTag(old.ID, node.ID)
 		if err != nil {
 			log.Error("Error obteniendo las llaves replicadas del antiguo predecesor en este nodo.")
-			return nil, nil, nil, errors.New(
+			return nil, nil, nil, nil, errors.New(
 				"error obteniendo las llaves replicadas del antiguo predecesor en este nodo\n" + err.Error())
 		}
 
 		// Elimina las llaves del anterior predecesor
-		err = node.dictionary.Discard(Keys(out))
+		err = node.dictionary.DiscardTags(Keys(out))
 		if err != nil {
 			log.Error("Error eliminando las llaves del anterior predecesor en este nodo.")
-			return nil, nil, nil, errors.New("error eliminando las llaves del anterior predecesor en este nodo\n" + err.Error())
+			return nil, nil, nil, nil, errors.New("error eliminando las llaves del anterior predecesor en este nodo\n" + err.Error())
 		}
 
 		log.Debug("Eliminacion exitosa de las llaves replicadas del anterior predecesor en este nodo.")
-		return in, out, deleted, nil
+		return in, out, deleted, intersection, nil
 	}
-	return in, out, nil, nil
+	return in, out, nil, intersection, nil
 }
 
 // Posible Metodo a modificar
@@ -435,34 +458,73 @@ func (node *Node) UpdatePredecessorKeys(old *chord.Node) {
 	// Si el nuevo predecesor no es el actual nodo.
 	if !Equals(pred.ID, node.ID) {
 		// Transfiere las claves correspondientes al nuevo predecesor.
-		in, out, deleted, err := node.DeletePredecessorKeys(old)
+		inTags, outTags, deletedTags, _, err := node.DeletePredecessorTags(old)
+
 		if err != nil {
-			log.Errorf("Error actualizando las claves del nuevo predecesor.\n%s", err.Error())
+			log.Errorf("Error actualizando los archivos del nuevo predecesor.\n%s", err.Error())
 			return
 		}
 
-		log.Debug("Trasnfiriendo las llaves del antiguo predecesor al sucesor.")
-		log.Debugf("Llaves a transferir: %s", Keys(out))
-		log.Debugf("Llaves restantes: %s", Keys(in))
-		log.Debugf("Llaves a eliminar: %s", Keys(deleted))
+		inFiles, outFiles, deletedFiles, intersectionFiles, err := node.DeletePredecessorFiles(old)
+		if err != nil {
+			log.Errorf("Error actualizando las etiqueta del nuevo predecesor.\n%s", err.Error())
+			return
+		}
+
+		log.Debug("Transfiriendo las etiquetas del antiguo predecesor al sucesor.")
+		log.Debugf("Etiquetas a transferir: %s", Keys(outTags))
+		log.Debugf("Etiquetas restantes: %s", Keys(inTags))
+		log.Debugf("Etiquetas a eliminar: %s", Keys(deletedTags))
+
+		var outName []string
+		for _, file := range outFiles {
+
+			outName = append(outName, file.Name+"-"+file.Extension)
+		}
+
+		var inName []string
+		for _, file := range inFiles {
+
+			inName = append(inName, file.Name+"-"+file.Extension)
+		}
+
+		var deletedName []string
+		for _, file := range deletedFiles {
+
+			deletedName = append(deletedName, file.Name+"-"+file.Extension)
+		}
+		log.Debug("Transfiriendo los archivos del antiguo predecesor al sucesor.")
+		log.Debugf("Archivos a transferir: %s", outName)
+		log.Debugf("Archivos restantes: %s", inName)
+		log.Debugf("Archivos a eliminar: %s", deletedName)
 
 		// Construye el diccionario del nuevo predecesor, al transferir sus claves correspondientes.
-		err = node.RPC.Extend(pred, &chord.ExtendRequest{Dictionary: out})
+		err = node.RPC.Extend(pred, &chord.ExtendRequest{Files: outFiles, Tags: outTags})
 		if err != nil {
-			log.Errorf("Error transfiriendo las claves al nuevo predecesor.\n%s", err.Error())
+			log.Errorf("Error transfiriendo la informacion al nuevo predecesor.\n%s", err.Error())
 			/*
-			 De existir claves eliminadas, se reinsertan en el almacenamiento de este nodo
+			 De existir archivos eliminados, se reinsertan en el almacenamiento de este nodo
 			 para prevenir perdida de informacion
 			*/
-			if deleted != nil {
+			if deletedFiles != nil {
 				//  Bloquea el diccionario para escribir en el, lo desbloquea al terminar.
 				node.dictLock.Lock()
-				err = node.dictionary.Extend(deleted)
+				err = node.dictionary.ExtendFiles(deletedFiles)
 				node.dictLock.Unlock()
 				if err != nil {
-					log.Errorf("Error reinsertando llaves eliminadas al diccionario.\n%s", err.Error())
+					log.Errorf("Error reinsertando archivos eliminados al diccionario.\n%s", err.Error())
 				}
 			}
+			if deletedTags != nil {
+				//  Bloquea el diccionario para escribir en el, lo desbloquea al terminar.
+				node.dictLock.Lock()
+				err = node.dictionary.ExtendTags(deletedTags)
+				node.dictLock.Unlock()
+				if err != nil {
+					log.Errorf("Error reinsertando etiquetas eliminadas al diccionario.\n%s", err.Error())
+				}
+			}
+
 			return
 		}
 		log.Debug("Transferencia exitosa de las llaves al nuevo predecesor.")
@@ -472,30 +534,63 @@ func (node *Node) UpdatePredecessorKeys(old *chord.Node) {
 		 del almacenamiento del sucesor
 		*/
 		if !Equals(suc.ID, node.ID) && !Equals(suc.ID, pred.ID) {
-			err = node.RPC.Discard(suc, &chord.DiscardRequest{Keys: Keys(out)})
+			err = node.RPC.Discard(suc, &chord.DiscardRequest{Tags: Keys(outTags), Files: outName})
 			if err != nil {
 				log.Errorf("Error eliminando las claves replicadas en el nodo sucesor en %s.\n%s", suc.IP, err.Error())
 				/*
-				 De haber claves eliminadas, se reinsertan para prevenir la perdida de informacion
+				 De haber informacion eliminada, se reinserta para prevenir la perdida de informacion
 				*/
-				if deleted != nil {
+				if deletedTags != nil {
 					// Bloquea el diccionario para leer y escribir en el, al terminar se desbloquea.
 					node.dictLock.Lock()
-					err = node.dictionary.Extend(deleted)
+					err = node.dictionary.ExtendTags(deletedTags)
 					node.dictLock.Unlock()
 					if err != nil {
-						log.Errorf("Error reinsertando las claves en este nodo.\n%s", err.Error())
+						log.Errorf("Error reinsertando las etiquetas en este nodo.\n%s", err.Error())
+					}
+				}
+
+				if deletedFiles != nil {
+					// Bloquea el diccionario para leer y escribir en el, al terminar se desbloquea.
+					node.dictLock.Lock()
+					err = node.dictionary.ExtendFiles(deletedFiles)
+					node.dictLock.Unlock()
+					if err != nil {
+						log.Errorf("Error reinsertando los archivos en este nodo.\n%s", err.Error())
 					}
 				}
 				return
 			}
 			log.Debug("Eliminacion exitosa de las llaves replicadas del antiguo predecesor en el nodo sucesor.")
 		}
+
+		log.Debug("Se les va a notificar a las etiquetas que hubo un cambio en la ubicacion de unos archivos.")
+		// Se recorre cada archivo
+		for _, files := range intersectionFiles {
+			tags := files.Tags
+
+			// Se recorre cada etiqueta
+			for _, tag := range tags {
+				// Se Genera una request para editar las etiquetas
+				enc := &chord.TagEncoder{
+					FileName:      files.Name,
+					FileExtension: files.Extension,
+					NodeID:        pred.ID,
+					NodeIP:        pred.IP,
+					NodePort:      pred.Port,
+				}
+
+				req := &chord.EditFileFromTagRequest{Tag: tag, Mod: enc}
+
+				go node.RPC.EditFileFromTag(node.Node, req)
+			}
+
+		}
 	}
 }
 
-// Posible Metodo a modificar
-// UpdateSuccessorKeys actualiza el nuevo sucesor replicando las llaves del nodo actual.
+// UpdateSuccessorKeys actualiza el nuevo sucesor replicando la informacion del nodo actual.
+
 func (node *Node) UpdateSuccessorKeys() {
 	//Bloquea el predecesor para leer de el, al terminar se desbloquea.
 	node.predLock.RLock()
@@ -511,19 +606,35 @@ func (node *Node) UpdateSuccessorKeys() {
 	if !Equals(suc.ID, node.ID) {
 		//Bloquea el diccionario para leer de el, al terminar se desbloquea.
 		node.dictLock.RLock()
-		in, out, err := node.dictionary.Partition(pred.ID, node.ID) // Obtiene las llaves de este nodo.
+		inFile, outFile, err1 := node.dictionary.PartitionFile(pred.ID, node.ID) // Obtiene las llaves de este nodo.
+		inTag, outTag, err2 := node.dictionary.PartitionTag(pred.ID, node.ID)
 		node.dictLock.RUnlock()
-		if err != nil {
-			log.Errorf("Error obteniendo las llaves de este nodo.\n%s", err.Error())
+		if err1 != nil || err2 != nil {
+			log.Errorf("Error obteniendo las llaves de este nodo.\n%s\n%s", err1.Error(), err2.Error())
 			return
 		}
+		// Se recorren los archivos para obtener el nombre de los que estan fuera del rango
+		var outFileNames []string
+		for _, file := range outFile {
+			outFileNames = append(outFileNames, file.Name)
 
-		log.Debug("Transferiendo las llaves de este nodo a su sucesor.")
-		log.Debugf("Llaves a transferir: %s", Keys(out))
-		log.Debugf("Llaves restantes: %s", Keys(in))
+		}
+		// Se recorren los archivos para obtener el nombre de los que estan dentro del rango
+		var inFileNames []string
+		for _, file := range inFile {
+			inFileNames = append(inFileNames, file.Name)
+
+		}
+		log.Debug("Transferiendo los archivos de este nodo a su sucesor.")
+		log.Debugf("Archivos a transferir: %s", outFileNames)
+		log.Debugf("Archivos restantes: %s", inFileNames)
+
+		log.Debug("Transferiendo las Etiquetas de este nodo a su sucesor.")
+		log.Debugf("Etiquetas a transferir: %s", Keys(outTag))
+		log.Debugf("Etiquetas restantes: %s", Keys(inTag))
 
 		//Transfiere las llaves de este nodo a su sucesor, para actualizarlo.
-		err = node.RPC.Extend(suc, &chord.ExtendRequest{Dictionary: in})
+		err := node.RPC.Extend(suc, &chord.ExtendRequest{Files: inFile, Tags: inTag})
 		if err != nil {
 			log.Errorf("Error trasfiriendo las llaves a su sucesor en %s.\n%s", suc.IP, err.Error())
 			return
