@@ -464,12 +464,11 @@ func (node *Node) PeriodicallyFixSuccessor() {
 
 // Posible Metodo a modificar
 /*
-FixStorage arregla la localizacon de  una llave en particular dentro del
-diccionario de almacenamiento. Para eso localiza el nodo  correspondiente. Si
+FixSTagtorage arregla la localizacon de una etiqueta en particular dentro del
+diccionario de almacenamiento. Para eso localiza el nodo correspondiente. Si
 el nodo es este nodo o su predecesor, entonces no hay problema.
 En otro caso esta mal localizada y por tanto debe ser reubicada y eliminada
 */
-// Este es un metodo a tener en cuenta
 func (node *Node) FixTagStorage(key string) {
 
 	//Bloquea el predecesor para leer de el, lo desbloquea al terminar
@@ -500,12 +499,12 @@ func (node *Node) FixTagStorage(key string) {
 		}
 
 		encod, _ := json.MarshalIndent(value, "", " ")
-		var mapa map[string][]byte
+		mapa := make(map[string][]byte)
 		mapa[key] = encod
 
 		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar
 		node.dictLock.Lock()
-		// Elimina la llave del almacenamiento local
+		// Elimina la etiqueta del almacenamiento local
 		err = node.dictionary.DeleteTag(key)
 		node.dictLock.Unlock()
 		if err != nil {
@@ -513,7 +512,7 @@ func (node *Node) FixTagStorage(key string) {
 			return
 		}
 
-		// Establece este par <key, value> en el nodo correspondiente
+		// Establece esta etiqueta en el nodo correspondiente
 		err = node.RPC.Extend(keyNode, &chord.ExtendRequest{Tags: mapa, Files: nil})
 		if err != nil {
 			log.Errorf("Error reubicando la llave  %s a %s.\n%s", key, keyNode.IP, err.Error())
@@ -536,12 +535,11 @@ func (node *Node) FixTagStorage(key string) {
 }
 
 /*
-FixStorage arregla la localizacon de  una llave en particular dentro del
-diccionario de almacenamiento. Para eso localiza el nodo  correspondiente. Si
+FixFileStorage arregla la localizacon de un archivo en particular dentro del
+del almacenamiento. Para eso localiza el nodo  correspondiente. Si
 el nodo es este nodo o su predecesor, entonces no hay problema.
 En otro caso esta mal localizada y por tanto debe ser reubicada y eliminada
 */
-// Este es un metodo a tener en cuenta
 func (node *Node) FixFileStorage(key string) {
 	//Bloquea el predecesor para leer de el, lo desbloquea al terminar
 	chain := strings.Split(key, "-")
@@ -559,7 +557,7 @@ func (node *Node) FixFileStorage(key string) {
 		return
 	}
 
-	// Si el nodo obtenido es distinto a el nodo actual o su predecesor, entonces esta mal ubicado
+	// Si el nodo obtenido es distinto al nodo actual o su predecesor, entonces esta mal ubicado
 	if !Equals(keyNode.ID, node.ID) && !Equals(keyNode.ID, pred.ID) {
 		// Bloquea el diccionario para leer de el, lo desbloquea al terminar
 		node.dictLock.RLock()
@@ -576,7 +574,7 @@ func (node *Node) FixFileStorage(key string) {
 
 		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar
 		node.dictLock.Lock()
-		// Elimina la llave del almacenamiento local
+		// Elimina el archivo del almacenamiento local
 		err = node.dictionary.DeleteFile(fileName, fileExtension)
 		node.dictLock.Unlock()
 		if err != nil {
@@ -590,44 +588,43 @@ func (node *Node) FixFileStorage(key string) {
 			Tags:      tags,
 		}
 
-		// Establece este par <key, value> en el nodo correspondiente
+		// Establece este fichero en el nodo correspondiente
 		err = node.RPC.Extend(keyNode, &chord.ExtendRequest{Tags: nil, Files: []*chord.TagFile{tagFile}})
 		if err != nil {
-			log.Errorf("Error reubicando la llave  %s a %s.\n%s", key, keyNode.IP, err.Error())
+			log.Errorf("Error reubicando el fichero  %s a %s.\n%s", key, keyNode.IP, err.Error())
 			/*
-				En caso de error, reinserta la llave en este nodo, para prevenir
+				En caso de error, reinserta el fichero en este nodo, para prevenir
 				la perdidad de informacion.
 			*/
 			// Bloquea el diccionario para escribir en el, desbloquea al terminar
 			node.dictLock.Lock()
-			// Reinserta la clave en el almacenamiento local
+			// Reinserta el fichero en el almacenamiento local
 			err = node.dictionary.SetFile(tagFile)
 			node.dictLock.Unlock()
 			if err != nil {
-				log.Errorf("Error reinsertando la llave %s en el almacenamiento local .\n%s", keyNode.IP, err.Error())
+				log.Errorf("Error reinsertando el fichero %s en el almacenamiento local .\n%s", keyNode.IP, err.Error())
 				return
 			}
 			return
 		}
 
-		/*
-			Como esto se llama para arreglar la replicacion, pero se deja comentado por si acaso
-			// Una vez que el archivo se movio adecuadamente paso a modificar el cambio que hubo
-			for _, tag := range tags {
-				// Se crea un nuevo objeto TagEncoder que va a tener la informacion a modificar
-				encoder := &chord.TagEncoder{
-					FileName:      fileName,
-					FileExtension: fileExtension,
-					NodeID:        keyNode.ID,
-					NodeIP:        keyNode.IP,
-					NodePort:      keyNode.Port,
-				}
-				// Se genera la request
-				req := &chord.EditFileFromTagRequest{Tag: tag, Mod: encoder}
-				// Por cada una de las etiquetas se modificia
-				go node.RPC.EditFileFromTag(keyNode, req)
+		//Como esto se llama para arreglar la replicacion, pero se deja comentado por si acaso
+		// Una vez que el archivo se movio adecuadamente paso a modificar el cambio que hubo
+		for _, tag := range tags {
+			// Se crea un nuevo objeto TagEncoder que va a tener la informacion a modificar
+			encoder := &chord.TagEncoder{
+				FileName:      fileName,
+				FileExtension: fileExtension,
+				NodeID:        keyNode.ID,
+				NodeIP:        keyNode.IP,
+				NodePort:      keyNode.Port,
 			}
-		*/
+			// Se genera la request
+			req := &chord.EditFileFromTagRequest{Tag: tag, Mod: encoder}
+			// Por cada una de las etiquetas se modificia
+			go node.RPC.EditFileFromTag(keyNode, req)
+		}
+
 	}
 }
 

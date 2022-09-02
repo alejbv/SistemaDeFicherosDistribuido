@@ -46,7 +46,7 @@ func (node *Node) Start() error {
 	listener, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Errorf("Error iniciando el servidor: no se puede escuchar en la dirección %s.", address)
-		return errors.New(
+		return fmt.Errorf(
 			fmt.Sprintf("error iniciando el servidor: no se puede escuchar en la dirección %s\n%s", address, err.Error()))
 	}
 	log.Infof("Listening at %s.", address)
@@ -136,7 +136,7 @@ func (node *Node) Stop() error {
 		err := node.RPC.SetPredecessor(suc, pred)
 		if err != nil {
 			log.Errorf("Error parando el servidor: error estableciendo el nuevo predecesor del sucesor en  %s.", suc.IP)
-			return errors.New(
+			return fmt.Errorf(
 				fmt.Sprintf("error parando el servidor: error estableciendo el nuevo predecesor del sucesor en  %s\n.%s",
 					suc.IP, err.Error()))
 		}
@@ -145,7 +145,7 @@ func (node *Node) Stop() error {
 		err = node.RPC.SetSuccessor(pred, suc)
 		if err != nil {
 			log.Errorf("Error parando el servidor: error estableciendo el nuevo sucesor del predecesor en %s.", pred.IP)
-			return errors.New(
+			return fmt.Errorf(
 				fmt.Sprintf("error parando el servidor: error estableciendo el nuevo sucesor del predecesor en %s\n.%s",
 					pred.IP, err.Error()))
 		}
@@ -236,7 +236,7 @@ func (node *Node) FindIDSuccessor(id []byte) (*chord.Node, error) {
 	suc, err := node.RPC.FindSuccessor(pred, id)
 	if err != nil {
 		log.Errorf("Error buscando el sucesor de la ID en %s.", pred.IP)
-		return nil, errors.New(
+		return nil, fmt.Errorf(
 			fmt.Sprintf("error buscando el sucesor de la ID en %s.\n%s", pred.IP, err.Error()))
 	}
 	// Devolver el sucesor obtenido.
@@ -256,14 +256,14 @@ func (node *Node) LocateKey(key string) (*chord.Node, error) {
 	id, err := HashKey(key, node.config.Hash)
 	if err != nil {
 		log.Errorf("Error generando la llave: %s.\n", key)
-		return nil, errors.New(fmt.Sprintf("error generando la llave: %s.\n%s", key, err.Error()))
+		return nil, fmt.Errorf(fmt.Sprintf("error generando la llave: %s.\n%s", key, err.Error()))
 	}
 
 	// Busca y obtiene el sucesor de esta ID
 	suc, err := node.FindIDSuccessor(id)
 	if err != nil {
 		log.Errorf("Error localizando el sucesor de esta ID: %s.\n", key)
-		return nil, errors.New(fmt.Sprintf("error localizando el sucesor de esta ID: %s.\n%s", key, err.Error()))
+		return nil, fmt.Errorf(fmt.Sprintf("error localizando el sucesor de esta ID: %s.\n%s", key, err.Error()))
 	}
 
 	log.Trace("Localizacion de la llave exitosa.")
@@ -323,13 +323,15 @@ func (node *Node) AbsorbPredecessorKeys(old *chord.Node) {
 				return
 			}
 			// Se recorren los archivos para obtener el nombre de los que estan fuera del rango
-			var outFileNames []string
+			//var outFileNames []string
+			outFileNames := make([]string, 0)
 			for _, file := range outFile {
 				outFileNames = append(outFileNames, file.Name)
 
 			}
 			// Se recorren los archivos para obtener el nombre de los que estan dentro del rango
-			var inFileNames []string
+			//var inFileNames []string
+			inFileNames := make([]string, 0)
 			for _, file := range inFile {
 				inFileNames = append(inFileNames, file.Name)
 
@@ -442,7 +444,6 @@ func (node *Node) DeletePredecessorTags(old *chord.Node) (map[string][]byte, map
 	return in, out, nil, intersection, nil
 }
 
-// Posible Metodo a modificar
 // UpdatePredecessorKeys actualiza el nuevo sucesor con la clave correspondiente.
 func (node *Node) UpdatePredecessorKeys(old *chord.Node) {
 	//  Bloquea el predecesor para leer de el, lo desbloquea al terminar.

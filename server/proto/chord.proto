@@ -74,31 +74,9 @@ message FindSuccesorResponse{
 // Otras Request
 message FindSuccesorRequest{
   bytes ID =1;
-}
-// GetRequest contains the key of a desired value.
-message GetRequest {
-  string Key = 1;
-  bool Lock = 2;
-  string IP = 3;
-}
 
-// SetRequest contains the <key, value> pair to set on storage.
-message SetRequest {
-  string Key = 1;
-  bytes Value = 2;
-  bool Replica = 3;
-  bool Lock = 4;
-  string IP = 5;
 }
-
-// DeleteRequest contains the key to eliminate.
-message DeleteRequest {
-  string Key = 1;
-  bool Replica = 2;
-  bool Lock = 3;
-  string IP = 4;
-}
-
+ 
 // ExtendRequest contains the <key, value> pairs to set on the storage.
 message ExtendRequest {
   repeated TagFile    Files = 1;
@@ -111,11 +89,6 @@ message DiscardRequest {
   repeated string Files =2;
 }
 
-// Otras Respuestas
-// GetResponse contains the value of a requested key.
-message GetResponse {
-  bytes Value = 1;
-}
 // PartitionResponse contains the contains the <key, value> pairs to return.
 message PartitionResponse {
   repeated TagFile    InFiles  = 1;
@@ -161,6 +134,7 @@ message DeleteFileRequest{
     string FileExtension = 2;
     bool   Replica = 3;
 }
+
 message DeleteFileResponse{}
 
 message DeleteFileFromTagRequest{
@@ -175,11 +149,13 @@ message DeleteTagRequest{
   string Tag = 1;
   bool Replica = 2;
 }
+
 message DeleteTagResponse{}
 
 message GetTagRequest{
    string tag = 1;
 }
+
 message GetTagResponse{
   TagEncoder Encoder = 1;
 }
@@ -187,8 +163,61 @@ message GetTagResponse{
 message DeleteFileByQueryRequest{
   repeated string tag = 1;
 }
+
 message DeleteFileByQueryResponse{}
 // Chord service for inter-node communication.
+
+message ListByQueryRequest{
+  repeated string Tags =1 ;
+}
+
+message ListByQueryResponse{
+  map<string, bytes> Response = 1;
+}
+message GetFileInfoRequest{
+  string FileName =1;
+  string FileExtension = 2;
+
+}
+
+message GetFileInfoResponse{
+    bytes Info = 1;
+}
+
+message DeleteTagsByQueryRequest{
+  repeated string QueryTags = 1;
+  repeated string RemoveTags = 2;
+}
+message DeleteTagsByQueryResponse{}
+
+message AddTagsByQueryRequest{
+  repeated string QueryTags = 1;
+  repeated string AddTags = 2;
+}
+
+message AddTagsByQueryResponse{}
+
+message AddTagsToFileRequest{
+string    FileName =1;
+string		FileExtension = 2;
+repeated string	ListTags = 3;
+bool			Replica =4;
+}
+message AddTagsToFileResponse{
+  Node Destiny = 1;
+}
+
+message DeleteTagsFromFileRequest{
+  string    FileName =1;
+  string		FileExtension = 2;
+  repeated string	ListTags = 3;
+  bool			Replica =4;
+  }
+  message DeleteTagsFromFileResponse{
+    Node Destiny = 1;
+  }
+  
+
 service Chord {
   // GetPredecessor devuelve el nodo que se cree que es el predecesor.
   rpc GetPredecessor(GetPredecessorRequest) returns (GetPredecessorResponse);
@@ -205,7 +234,17 @@ service Chord {
   // Check comprueba si el nodo esta vivo.
   rpc Check(CheckRequest) returns (CheckResponse);
 
+  rpc Partition(PartitionRequest) returns (PartitionResponse);
+  // Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
+  rpc Extend(ExtendRequest) returns (ExtendResponse);
+  // Discard elimina todos los pares <clave, valor> en el almacenamiento.
+  rpc Discard(DiscardRequest) returns (DiscardResponse);
 
+
+/*
+      Metodos Propios de la Aplicacion
+===================================================================================
+*/
    /*
     Manda un fichero hacia el sistema y estos son guardados con
     las etiquetas contenidas en tag-list
@@ -216,24 +255,48 @@ service Chord {
   Manda a eliminar todos los archivos que cumplen con una determinada query
   */
   rpc DeleteFileByQuery(DeleteFileByQueryRequest) returns (DeleteFileByQueryResponse);
-  /*
-   Manda a eliminar un archivo
-  */
-  rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
-  /*
-    Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
-  */
-  rpc AddTag(AddTagRequest) returns (AddTagResponse);
+  rpc ListByQuery(ListByQueryRequest) returns (ListByQueryResponse);
+  rpc DeleteTagsByQuery(DeleteTagsByQueryRequest) returns (DeleteTagsByQueryResponse);
+  rpc AddTagsByQuery(AddTagsByQueryRequest) returns (AddTagsByQueryResponse);
 
-  rpc GetTag(GetTagRequest) returns (stream GetTagResponse);
-  rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
-  rpc DeleteFileFromTag(DeleteFileFromTagRequest) returns (DeleteFileFromTagResponse);
+ 
+
   
-  rpc EditFileFromTag(EditFileFromTagRequest) returns (EditFileFromTagResponse);
+/*
+      Metodos utilizados para comunicacion entre nodos de la aplicacion
+=========================================================================================================
+*/
+
+/*
+              Metodos de archivos
+=========================================================================================================
+*/
+
+// Manda a agregar en las etiquetas de un archivo nuevas etiquetas
+rpc AddTagsToFile(AddTagsToFileRequest) returns (AddTagsToFileResponse);
+// Manda a eliminar de las etiquetas de un archivo un conjunto de etiquetas 
+rpc DeleteTagsFromFile(DeleteTagsFromFileRequest) returns (DeleteTagsFromFileResponse);
+
+
+//Manda a guardar una de las etiquetas de un archivo y la informacion relevante de dicho archivo
+rpc AddTag(AddTagRequest) returns (AddTagResponse);
+
+//Elimina de las referencias a archivos guardadas en las etiquetas la referencia a un archivo
+rpc DeleteFileFromTag(DeleteFileFromTagRequest) returns (DeleteFileFromTagResponse);
   
-  rpc Partition(PartitionRequest) returns (PartitionResponse);
-  // Extend establece una lista de pares <clave, valor> en el diccionario de almacenamiento
-  rpc Extend(ExtendRequest) returns (ExtendResponse);
-  // Discard elimina todos los pares <clave, valor> en el almacenamiento.
-  rpc Discard(DiscardRequest) returns (DiscardResponse);
+
+//Manda a eliminar un archivo
+rpc DeleteFile(DeleteFileRequest) returns (DeleteFileResponse);
+
+// Recupera todas las referencias a archivos que guarda una etiqueta
+rpc GetTag(GetTagRequest) returns (stream GetTagResponse);
+
+//Manda a eliminar una carpeta de etiquetas determinada
+rpc DeleteTag(DeleteTagRequest) returns (DeleteTagResponse);
+  
+// Recupera la infomrmacion de un archivo
+rpc GetFile(GetFileInfoRequest) returns (GetFileInfoResponse);
+
+// Edita la referencia a un archivo guardado por una etiqueta
+rpc EditFileFromTag(EditFileFromTagRequest) returns (EditFileFromTagResponse);
 }
