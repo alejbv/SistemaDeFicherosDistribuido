@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package chord;
-option go_package="./server/chord/chord";
+option go_package="./chord";
 
 // Objetos del Chord
 // Nodo que contiene una ID y una direccion IP.

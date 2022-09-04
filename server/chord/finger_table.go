@@ -1,7 +1,7 @@
 package chord
 
 import (
-	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord/chord"
+	"github.com/alejbv/SistemaDeFicherosDistribuido/chord"
 )
 
 // Definicion de la FingerTable.

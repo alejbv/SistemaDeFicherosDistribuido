@@ -3,7 +3,7 @@ package chord
 import (
 	"time"
 
-	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord/chord"
+	"github.com/alejbv/SistemaDeFicherosDistribuido/chord"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 )

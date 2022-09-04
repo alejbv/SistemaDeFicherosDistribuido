@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/alejbv/SistemaDeFicherosDistribuido/server/chord/chord"
+	"github.com/alejbv/SistemaDeFicherosDistribuido/chord"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -180,7 +180,11 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 			// Llama a eliminar el fichero localmente
 			if Equals(target[key].ID, node.ID) {
 
+				//Bloquea el diccionario para escribir en el, se desbloquea el final
+				node.dictLock.Lock()
 				err := node.dictionary.DeleteFile(name, extension)
+				node.dictLock.Unlock()
+
 				if err != nil {
 					return &chord.DeleteFileByQueryResponse{}, err
 				}
@@ -223,7 +227,12 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 				}
 				if Equals(keyNode.ID, node.ID) {
 					// Se elimina la informacion local
+
+					//Bloquea el diccionario para escribir en el, se desbloquea el final
+					node.dictLock.Lock()
 					err := node.dictionary.DeleteFileFromTag(tag, name, extension)
+					node.dictLock.Unlock()
+
 					if err != nil {
 						log.Errorf("Error eliminando  la informacion del archivo %s de la etiqueta %s\n", name, err.Error())
 					}
@@ -279,7 +288,11 @@ func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest
 			// Obtener el archivo
 			if Equals(target[key].ID, node.ID) {
 
+				//Bloquea el diccionario para escribir en el, se desbloquea el final
+				node.dictLock.Lock()
 				tempValue, err := node.dictionary.GetFileInfo(name, extension)
+				node.dictLock.Unlock()
+
 				if err != nil {
 					return &chord.ListByQueryResponse{}, err
 				}
@@ -338,7 +351,11 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 			}
 			if Equals(target[key].ID, node.ID) {
 
+				//Bloquea el diccionario para escribir en el, se desbloquea el final
+				node.dictLock.Lock()
 				_, err := node.dictionary.AddTagsToFile(name, extension, req.AddTags)
+				node.dictLock.Unlock()
+
 				if err != nil {
 					log.Errorf("Error mientras se agregaban etiquetas a los archivos locales:")
 					return &chord.AddTagsByQueryResponse{}, err
@@ -385,7 +402,12 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 
 				if Equals(keyNode.ID, node.ID) {
 					// Se elimina la informacion local
+
+					//Bloquea el diccionario para escribir en el, se desbloquea el final
+					node.dictLock.Lock()
 					err := node.dictionary.DeleteFileFromTag(tag, name, extension)
+					node.dictLock.Unlock()
+
 					if err != nil {
 						log.Errorf("Error eliminando  la informacion del archivo %s de la etiqueta %s\n", name, err.Error())
 					}
@@ -450,7 +472,11 @@ func (node *Node) DeleteTagFromFileByQuery(ctx context.Context, req *chord.Delet
 			}
 			if Equals(target[key].ID, node.ID) {
 
+				//Bloquea el diccionario para escribir en el, se desbloquea el final
+				node.dictLock.Lock()
 				_, err := node.dictionary.DeleteTagsFromFile(name, extension, req.RemoveTags)
+				node.dictLock.Unlock()
+
 				if err != nil {
 					log.Errorf("Error mientras se eliminaban la informacion de los archivos de las etiquetas locales:")
 					return &chord.DeleteTagsByQueryResponse{}, err
@@ -497,7 +523,12 @@ func (node *Node) DeleteTagFromFileByQuery(ctx context.Context, req *chord.Delet
 
 				if Equals(keyNode.ID, node.ID) {
 					// Se elimina la informacion local
+
+					//Bloquea el diccionario para escribir en el, se desbloquea el final
+					node.dictLock.Lock()
 					err := node.dictionary.DeleteFileFromTag(tag, name, extension)
+					node.dictLock.Unlock()
+
 					if err != nil {
 						log.Errorf("Error eliminando  la informacion del archivo %s de la etiqueta %s\n", name, err.Error())
 					}
@@ -565,6 +596,7 @@ func (node *Node) QuerySolver(Tags []string) (map[string][]string, map[string]*c
 			// Bloquea el diccionario para escribir en el y se desbloquea al terminar la funcion.
 			node.dictLock.Lock()
 			// obteniendo la informacion de la etiqueta .
+
 			values, err := node.dictionary.GetTag(tag)
 			node.dictLock.Unlock()
 			if err != nil && err != os.ErrPermission {
