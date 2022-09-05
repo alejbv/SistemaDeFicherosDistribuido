@@ -13,7 +13,7 @@ import (
 	"github.com/alejbv/SistemaDeFicherosDistribuido/chord"
 )
 
-func AddFile(client chord.ChordClient, filePath string, tags []string) error {
+func ClientAddFile(client chord.ChordClient, filePath string, tags []string) error {
 
 	chain := strings.Split(filePath, "/")
 	tempName := strings.Split(chain[len(chain)-1], ".")
@@ -49,7 +49,7 @@ func AddFile(client chord.ChordClient, filePath string, tags []string) error {
 	}
 	return nil
 }
-func DeleteFile(client chord.ChordClient, tags []string) error {
+func ClientDeleteFile(client chord.ChordClient, tags []string) error {
 
 	log.Printf("Se van a eliminar todos los archivos  con etiquetas\n %s", tags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
@@ -64,7 +64,7 @@ func DeleteFile(client chord.ChordClient, tags []string) error {
 	}
 	return nil
 }
-func ListFiles(client chord.ChordClient, tags []string) error {
+func ClientListFiles(client chord.ChordClient, tags []string) error {
 
 	log.Printf("Se va a obtener la informacion de los archivos con etiquetas\n %s", tags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
@@ -94,7 +94,7 @@ func ListFiles(client chord.ChordClient, tags []string) error {
 	return nil
 
 }
-func AddTags(client chord.ChordClient, queryTags, addTags []string) error {
+func ClientAddTags(client chord.ChordClient, queryTags, addTags []string) error {
 
 	log.Printf("Se van a agregar a todos los archivos  con etiquetas\n %s\n Las etiquetas:%s", queryTags, addTags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
@@ -111,7 +111,7 @@ func AddTags(client chord.ChordClient, queryTags, addTags []string) error {
 	return nil
 }
 
-func DeleteTags(client chord.ChordClient, queryTags, deleteTags []string) error {
+func ClientDeleteTags(client chord.ChordClient, queryTags, deleteTags []string) error {
 
 	log.Printf("Se van a eliminar de todos los archivos  con etiquetas\n %s\n Las etiquetas:%s", queryTags, deleteTags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
