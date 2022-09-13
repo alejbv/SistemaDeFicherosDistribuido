@@ -49,7 +49,7 @@ func (node *Node) Start() error {
 		return fmt.Errorf(
 			fmt.Sprintf("error iniciando el servidor: no se puede escuchar en la dirección %s\n%s", address, err.Error()))
 	}
-	log.Infof("Listening at %s.", address)
+	log.Infof("Escuchando en  %s.", address)
 
 	node.successors = NewQueue[chord.Node](node.config.StabilizingNodes) // Se crea la cola de sucesores.
 	node.successors.PushBack(node.Node)                                  // Se establece a este nodo como su propio sucesor.
@@ -60,11 +60,11 @@ func (node *Node) Start() error {
 	err = node.dictionary.Clear()                                        // Se limpia el diccionario
 	if err != nil {
 		log.Errorf("Error iniciando el servidor: el diccionario no es valido.")
-		return errors.New("errror iniciando el servidor: el diccionario no es valido\n" + err.Error())
+		return errors.New("error iniciando el servidor: el diccionario no es valido\n" + err.Error())
 	}
 
 	chord.RegisterChordServer(node.server, node) // Se registra a este servidor como un servidor chord.
-	log.Debug("Registrado nodo como servidor chord.")
+	log.Info("Registrado nodo como servidor chord.")
 
 	err = node.RPC.Start() // Se empiezan los servicios RPC (capa de transporte).
 	if err != nil {

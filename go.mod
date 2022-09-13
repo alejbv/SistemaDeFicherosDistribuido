@@ -38,6 +38,7 @@ require (
 	github.com/spf13/viper v1.12.0 // indirect
 	github.com/stretchr/testify v1.8.0 // indirect
 	github.com/subosito/gotenv v1.3.0 // indirect
+	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816 // indirect
 	github.com/travisjeffery/proglog v0.0.0-20201127042147-f6dae5fb8cb4 // indirect
 	github.com/tysonmote/gommap v0.0.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
@@ -47,7 +48,7 @@ require (
 	golang.org/x/mod v0.6.0-dev.0.20220419223038-86c51ed26bb4 // indirect
 	golang.org/x/net v0.0.0-20220805013720-a33c5aa5df48 // indirect
 	golang.org/x/sync v0.0.0-20220722155255-886fb9371eb4 // indirect
-	golang.org/x/sys v0.0.0-20220818161305-2296e01440c6 // indirect
+	golang.org/x/sys v0.0.0-20220909162455-aba9fc2a8ff2 // indirect
 	golang.org/x/text v0.3.7 // indirect
 	golang.org/x/tools v0.1.13-0.20220803210227-8b9a1fbdf5c3 // indirect
 	golang.org/x/tools/gopls v0.9.1 // indirect

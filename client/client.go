@@ -79,12 +79,15 @@ func NetDiscover(ip net.IP) (string, error) {
 func GetOutboundIP() net.IP {
 	conn, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {
+
 		log.Fatal(err)
+		return nil
 	}
 
 	defer func(conn net.Conn) {
 		err := conn.Close()
 		if err != nil {
+			fmt.Println("No se pudo cerrar la conexion al servidor")
 
 		}
 	}(conn)
@@ -112,6 +115,7 @@ func StartClient() (chord.ChordClient, error) {
 
 	if err != nil {
 		log.Fatalf("No se pudo realizar la conexion al servidor con IP %s\n %v", addres, err)
+		return nil, err
 	}
 
 	defer conn.Close()

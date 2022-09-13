@@ -16,14 +16,11 @@ var cfgFile string
 
 // rootCmd represents the base command when called without any subcommands
 var rootCmd = &cobra.Command{
-	Use:   "SistemaDeFicherosDistribuido",
-	Short: "A brief description of your application",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Use:   "tagFile",
+	Short: "Esta es una interfaz de comando (CLI) para poder interactuar con el sistema",
+	Long: `Esta es una interfaz de comando para interactuar con los servicios creados para
+	el proyecto de sistemas distribuidos. Entre estos servicios estan la capacidad de mandar archivos
+	de eliminar archivos, de listar los archivos, etc`,
 	// Uncomment the following line if your bare application
 	// has an action associated with it:
 	// Run: func(cmd *cobra.Command, args []string) { },
