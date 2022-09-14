@@ -37,6 +37,14 @@ func (dictionary *DiskDictionary) ChangePath(newPath string) {
 
 	dictionary.Path = newPath
 }
+func (dictionary *DiskDictionary) Inicialize() {
+	fileDir := dictionary.Path + "files"
+	fileTag := dictionary.Path + "tags"
+	os.Mkdir(fileDir, 0755)
+	log.Info("Carpeta para los archivos creada \n")
+	os.Mkdir(fileTag, 0755)
+	log.Info("Carpeta para las etiqueta creada \n")
+}
 
 func (dictionary *DiskDictionary) GetFile(fileName, fileExtension string) ([]byte, []string, error) {
 	log.Debugf("Cargando archivo: %s\n", fileName)
@@ -390,13 +398,10 @@ func (dictionary *DiskDictionary) DeleteFileFromTag(tag, fileName, fileExtension
 		temp := make([]TagEncoding, 0)
 		for _, value := range save {
 			// Si es el archivo adecuado se ignora
-			if value.FileName == fileName && value.FileExtension == fileExtension {
-				continue
-
-				// En otro caso se almacena
-			} else {
+			if value.FileName != fileName || value.FileExtension != fileExtension {
 				temp = append(temp, value)
 
+				// En otro caso se almacena
 			}
 		}
 
@@ -454,9 +459,10 @@ func (dictionary *DiskDictionary) PartitionTag(L, R []byte) (map[string][]byte, 
 	// Lista todos los directorios dentro de tags.
 	// O sea lista todas las etiquetas almacenadas en el almacenamiento local
 	keys, err := ioutil.ReadDir(fileDir)
-	if err != nil {
+	if err != nil && keys != nil {
 		log.Error("No se pudo listar los directorios de las etiquetas")
 		return nil, nil, err
+
 	}
 
 	for _, dir := range keys {
@@ -501,11 +507,11 @@ func (dictionary *DiskDictionary) PartitionFile(L, R []byte) ([]*chord.TagFile, 
 	// Lista todos los directorios dentro de files.
 	// O sea lista todas los ficheros almacenados en el almacenamiento local
 	keys, err := ioutil.ReadDir(fileDir)
-	if err != nil {
-		log.Error("No se pudo listar los directorios de las etiquetas")
+	if err != nil && keys != nil {
+		log.Error("No se pudo listar los directorios de los archivos")
 		return nil, nil, err
-	}
 
+	}
 	for _, dir := range keys {
 		// Me muevo por todos los directorios
 		if dir.IsDir() {

@@ -41,6 +41,8 @@ func (node *Node) Start() error {
 	node.IP = ip.String() //Se le asigna al nodo el IP correspondiente.
 	currentPath := node.dictionary.GetPath()
 	node.dictionary.ChangePath(currentPath + string(node.ID) + "/")
+	// Inicializa donde se almacena la info del nodo
+	node.dictionary.Inicialize()
 	// Empezando a escuchar en la dirección correspondiente.
 	log.Debug("Tratando de escuchar en la dirección correspondiente.")
 	listener, err := net.Listen("tcp", address)
@@ -627,12 +629,12 @@ func (node *Node) UpdateSuccessorKeys() {
 
 		}
 		log.Debug("Transferiendo los archivos de este nodo a su sucesor.")
-		log.Debugf("Archivos a transferir: %s", outFileNames)
-		log.Debugf("Archivos restantes: %s", inFileNames)
+		log.Debugf("Archivos a transferir: %s", inFileNames)
+		log.Debugf("Archivos restantes: %s", outFileNames)
 
 		log.Debug("Transferiendo las Etiquetas de este nodo a su sucesor.")
-		log.Debugf("Etiquetas a transferir: %s", Keys(outTag))
-		log.Debugf("Etiquetas restantes: %s", Keys(inTag))
+		log.Debugf("Etiquetas a transferir: %s", Keys(inTag))
+		log.Debugf("Etiquetas restantes: %s", Keys(outTag))
 
 		//Transfiere las llaves de este nodo a su sucesor, para actualizarlo.
 		err := node.RPC.Extend(suc, &chord.ExtendRequest{Files: inFile, Tags: inTag})

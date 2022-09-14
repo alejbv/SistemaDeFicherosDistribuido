@@ -63,8 +63,11 @@ type Storage interface {
 	// Se obtiene el path local donde se trabaja
 	GetPath() string
 
-	// Pertite cambiar el path
+	// Permite cambiar el path
 	ChangePath(string)
+
+	// Crea las carpetes donde se almacenaran los archivos y las etiquetas
+	Inicialize()
 
 	// Elimina toda la informacion almacenada localmente
 	Clear() error

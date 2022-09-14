@@ -32,7 +32,7 @@ func (node *Node) Stabilize() {
 		return
 	}
 
-	candidate, err := node.RPC.GetPredecessor(suc) // En otro caso obten el predecesor de este nodo.
+	candidate, err := node.RPC.GetPredecessor(suc) // En otro caso obtiene el predecesor de este nodo.
 	if err != nil {
 		log.Errorf("Error estabilizando el nodo: no se puede obtener el predecesor del sucesor en %s.\n%s", suc.IP, err.Error())
 		return
@@ -185,7 +185,7 @@ func (node *Node) CheckSuccessor() {
 		err := node.RPC.Check(suc)
 		// De no estarlo se reemplaza
 		if err != nil {
-			// Bloquea el predecesor para escribir en el, al terminar se desbloquea.
+			// Bloquea la cola de sucesores para leer de ella, al terminar se desbloquea.
 			node.sucLock.Lock()
 			node.successors.PopBeg() // Remueve el actual sucesor.
 			// Se agrega el final este nodo para asegurar que la cola no este vacia.
