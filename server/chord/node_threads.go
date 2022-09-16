@@ -106,7 +106,9 @@ func (node *Node) CheckPredecessor() {
 			/*
 				Posible modificacion
 			*/
+			node.dictLock.Lock()
 			intersectionFiles, _, _ := node.dictionary.PartitionFile(pred.ID, node.ID)
+			node.dictLock.Unlock()
 			go func() {
 
 				node.AbsorbPredecessorKeys(pred)
@@ -659,7 +661,7 @@ func (node *Node) PeriodicallyFixStorage() {
 				node.dictLock.RLock()
 				// Obtener el diccionario de las llaves replicadas
 				_, outTags, err := node.dictionary.PartitionTag(pred.ID, node.ID)
-				node.dictLock.RUnlock()
+				//node.dictLock.RUnlock()
 				if err != nil {
 					log.Errorf("Error arreglando el diccionario de almacenamiento local: "+
 						"No se puede obtener las etiquetas replicadas de este nodo.\n%s", err.Error())
