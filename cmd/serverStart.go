@@ -26,6 +26,7 @@ var serverStartCmd = &cobra.Command{
 		rsaPublicteKeyPath := "pub.pem"
 		network := "tcp"
 		services.StartServer(network, rsaPrivateKeyPath, rsaPublicteKeyPath)
+		log.Info("Servicio Iniciado...")
 		for {
 
 		}

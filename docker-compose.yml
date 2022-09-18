@@ -1,0 +1,57 @@
+services:
+  first_node:
+    container_name: first_node
+    image: tagfile:v1
+    command: serverStart
+    networks:
+      chord_net:
+        ipv4_address: 192.28.0.2
+
+  second_node:
+    container_name: second_node
+    image: tagfile:v1
+    command: serverStart
+    networks:
+      chord_net:
+        ipv4_address: 192.28.0.3
+    depends_on:
+      - first_node
+
+  third_node:
+    container_name: third_node
+    image: tagfile:v1
+    command: serverStart
+    networks:
+      chord_net:
+        ipv4_address: 192.28.0.4
+    depends_on:
+      - first_node
+
+  fourth_node:
+    container_name: fourth_node
+    image: tagfile:v1
+    command: serverStart
+    networks:
+      chord_net:
+        ipv4_address: 192.28.0.5
+    depends_on:
+      - first_node
+
+  fifth_node:
+    container_name: fifth_node
+    image: tagfile:v1
+    command: serverStart
+    networks:
+      chord_net:
+        ipv4_address: 192.28.0.6
+    depends_on:
+      - first_node
+
+networks:
+  chord_net:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.28.0.0/16
+          gateway: 192.28.0.1

@@ -16,15 +16,11 @@ import (
 
 type DiskDictionary struct {
 	Path string
-	//data map[string]void // Internal dictionary
-	//lock map[string]string // Lock states
 	Hash func() hash.Hash // Hash function to use
 }
 
 func NewDiskDictionary(hash func() hash.Hash, path string) *DiskDictionary {
 	return &DiskDictionary{
-		//data: make(map[string]void),
-		//lock: make(map[string]string),
 		Path: path,
 		Hash: hash,
 	}

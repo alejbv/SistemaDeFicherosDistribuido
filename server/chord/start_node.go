@@ -76,6 +76,7 @@ func (node *Node) Start() error {
 
 	// Empezando el servicio en el socket abierto
 	go node.Listen()
+	go node.BroadListen()
 
 	discovered, err := node.NetDiscover(ip) // Descubre la red chord, de existir
 	if err != nil {
@@ -102,7 +103,6 @@ func (node *Node) Start() error {
 	go node.PeriodicallyFixSuccessor()
 	go node.PeriodicallyFixFinger()
 	go node.PeriodicallyFixStorage()
-	go node.BroadListen()
 
 	log.Info("Servidor Iniciado.")
 	return nil
@@ -170,7 +170,7 @@ func (node *Node) Listen() {
 	log.Info("Empezando el servicio en el socket abierto.")
 	err := node.server.Serve(node.sock)
 	if err != nil {
-		log.Errorf("No se puede dar el ser servicio en  %s.\n%s", node.IP, err.Error())
+		log.Errorf("No se puede dar el servicio en  %s.\n%s", node.IP, err.Error())
 		return
 	}
 }
@@ -648,40 +648,50 @@ func (node *Node) UpdateSuccessorKeys() {
 
 // BroadListen espera por mensajes de broadcast.
 func (node *Node) BroadListen() {
-	// Espera para que el puerto especifico este libre de uso.
-	pc, err := net.ListenPacket("udp4", ":8830")
-	for err != nil {
-		pc, err = net.ListenPacket("udp4", ":8830")
+
+	// Resolver para poder escuchar la respuesta al broadcast
+	listAddr, err := net.ResolveUDPAddr("udp4", ":8831")
+	if err != nil {
+		log.Error("Error al vincular el puerto 8831 para mensajes entrantes en la parte del servidor")
+		return
 	}
-	// Cierra el socket al final de la funcion.
-	defer func(pc net.PacketConn) {
-		err := pc.Close()
-		if err != nil {
-			return
-		}
-	}(pc)
+
+	// Tratando de escuchar al puerto en uso.
+	listen, err := net.ListenUDP("udp4", listAddr)
+	if err != nil {
+		log.Errorf("Error al crear el objeto que recibe las transmisiones: %s\n", err.Error())
+		return
+	}
+	defer listen.Close()
+	log.Info("Se logro crear exitosamente el listener asociado al puerto 8831")
 
 	// Empieza a escuchar mensajes
+	log.Info("El nodo empezo a escuchar")
 	for {
 		// Si el nodo servidor está caido, regresa
 		if !IsOpen(node.shutdown) {
+			log.Info("El nodo dejo de escuchar")
 			return
 		}
 
 		// Crea el buffer para almacenar el mensaje
 		buf := make([]byte, 1024)
 		// Espera por el mensaje
-		n, address, err := pc.ReadFrom(buf)
+		n, address, err := listen.ReadFromUDP(buf[0:])
 		if err != nil {
 			log.Errorf("Error de mensaje de broadcast entrante.\n%s", err.Error())
 			continue
 		}
+		if n != 0 {
+			log.Infof("Llego informacion :%s\n", string(buf))
+		}
 
-		log.Debugf("Respuesta al mensaje entrante. %s enviar esto: %s", address, buf[:n])
+		log.Infof("Respuesta al mensaje entrante. %s enviar esto: %s", address, buf[:n])
 
 		// Si el mensaje entrante es el especifico, se le responde con la respuesta en especifico.
 		if string(buf[:n]) == "Chord?" {
-			_, err = pc.WriteTo([]byte("Yo soy chord"), address)
+			log.Info("Llego un mensaje de un nuevo nodo")
+			_, err = listen.WriteToUDP([]byte("Yo soy chord"), address)
 			if err != nil {
 				log.Errorf("Error respondiendo al mensaje de broadcast.\n%s", err.Error())
 				continue
@@ -694,26 +704,35 @@ func (node *Node) BroadListen() {
 func (node *Node) NetDiscover(ip net.IP) (string, error) {
 	// La dirección de broadcast.
 	ip[3] = 255
+
 	broadcast := ip.String() + ":8830"
 
-	// Tratando de escuchar al puerto en uso.
-	pc, err := net.ListenPacket("udp4", ":8830")
-	if err != nil {
-		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
-		return "", err
-	}
-
 	//Resuelve la dirección a la que se va a hacer broadcast.
-	out, err := net.ResolveUDPAddr("udp4", broadcast)
+	outAddr, err := net.ResolveUDPAddr("udp4", broadcast)
 	if err != nil {
 		log.Errorf("Error resolviendo la direccion de broadcast %s.", broadcast)
 		return "", err
 	}
 
-	log.Info("Resuelta direccion UPD broadcast.")
+	// Resolver para poder escuchar la respuesta al broadcast
+	listAddr, err := net.ResolveUDPAddr("udp4", ":8830")
+	if err != nil {
+		log.Error("Error al vincular el puerto 8830 para mensajes entrantes")
+		return "", err
+	}
+
+	// Tratando de escuchar al puerto en uso.
+	listen, err := net.ListenUDP("udp4", listAddr)
+	if err != nil {
+		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
+		return "", err
+	}
+	defer listen.Close()
+
+	log.Infof("Resuelta direccion UPD broadcast:%s.", broadcast)
 
 	// Enviando el mensaje
-	_, err = pc.WriteTo([]byte("Chord?"), out)
+	_, err = listen.WriteToUDP([]byte("Chord?"), outAddr)
 	if err != nil {
 		log.Errorf("Error enviando el mensaje de broadcast a la dirección%s.", broadcast)
 		return "", err
@@ -729,20 +748,20 @@ func (node *Node) NetDiscover(ip net.IP) (string, error) {
 		buf := make([]byte, 1024)
 
 		// Estableciendo el tiempo de espera para mensajes entrantes.
-		err = pc.SetReadDeadline(time.Now().Add(2 * time.Second))
+		err = listen.SetReadDeadline(time.Now().Add(5 * time.Second))
 		if err != nil {
 			log.Error("Error establecientdo el tiempo de espera para mensajes entrantes.")
 			return "", err
 		}
 
 		// Esperando por un mensaje.
-		n, address, err := pc.ReadFrom(buf)
+		n, address, err := listen.ReadFromUDP(buf)
 		if err != nil {
 			log.Errorf("Error leyendo el mensaje entrante.\n%s", err.Error())
 			continue
 		}
 
-		log.Debugf("Mensaje de respuesta entrante. %s enviado a: %s", address, buf[:n])
+		log.Infof("Mensaje de respuesta entrante. %s enviado a: %s", address, buf[:n])
 
 		if string(buf[:n]) == "Yo soy chord" {
 			return strings.Split(address.String(), ":")[0], nil
