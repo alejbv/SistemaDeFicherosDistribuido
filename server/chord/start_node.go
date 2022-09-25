@@ -705,7 +705,7 @@ func (node *Node) NetDiscover(ip net.IP) (string, error) {
 	// La dirección de broadcast.
 	ip[3] = 255
 
-	broadcast := ip.String() + ":8830"
+	broadcast := ip.String() + ":8831"
 
 	//Resuelve la dirección a la que se va a hacer broadcast.
 	outAddr, err := net.ResolveUDPAddr("udp4", broadcast)
