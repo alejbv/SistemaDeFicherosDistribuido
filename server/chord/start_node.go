@@ -650,9 +650,9 @@ func (node *Node) UpdateSuccessorKeys() {
 func (node *Node) BroadListen() {
 
 	// Resolver para poder escuchar la respuesta al broadcast
-	listAddr, err := net.ResolveUDPAddr("udp4", ":8831")
+	listAddr, err := net.ResolveUDPAddr("udp4", "0.0.0.0:8888")
 	if err != nil {
-		log.Error("Error al vincular el puerto 8831 para mensajes entrantes en la parte del servidor")
+		log.Error("Error al vincular el puerto 8888 para mensajes entrantes en la parte del servidor")
 		return
 	}
 
@@ -675,7 +675,7 @@ func (node *Node) BroadListen() {
 		}
 
 		// Crea el buffer para almacenar el mensaje
-		buf := make([]byte, 1024)
+		buf := make([]byte, 15000)
 		// Espera por el mensaje
 		n, address, err := listen.ReadFromUDP(buf[0:])
 		if err != nil {
@@ -703,9 +703,9 @@ func (node *Node) BroadListen() {
 // NetDiscover trata de encontrar si existe en la red algun otro anillo chord.
 func (node *Node) NetDiscover(ip net.IP) (string, error) {
 	// La dirección de broadcast.
+	ip[2] = 255
 	ip[3] = 255
-
-	broadcast := ip.String() + ":8831"
+	broadcast := ip.String() + ":8888"
 
 	//Resuelve la dirección a la que se va a hacer broadcast.
 	outAddr, err := net.ResolveUDPAddr("udp4", broadcast)
@@ -714,15 +714,8 @@ func (node *Node) NetDiscover(ip net.IP) (string, error) {
 		return "", err
 	}
 
-	// Resolver para poder escuchar la respuesta al broadcast
-	listAddr, err := net.ResolveUDPAddr("udp4", ":8830")
-	if err != nil {
-		log.Error("Error al vincular el puerto 8830 para mensajes entrantes")
-		return "", err
-	}
-
 	// Tratando de escuchar al puerto en uso.
-	listen, err := net.ListenUDP("udp4", listAddr)
+	listen, err := net.ListenUDP("udp4", outAddr)
 	if err != nil {
 		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
 		return "", err
@@ -748,7 +741,7 @@ func (node *Node) NetDiscover(ip net.IP) (string, error) {
 		buf := make([]byte, 1024)
 
 		// Estableciendo el tiempo de espera para mensajes entrantes.
-		err = listen.SetReadDeadline(time.Now().Add(5 * time.Second))
+		err = listen.SetReadDeadline(time.Now().Add(2 * time.Second))
 		if err != nil {
 			log.Error("Error establecientdo el tiempo de espera para mensajes entrantes.")
 			return "", err
