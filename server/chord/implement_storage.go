@@ -629,16 +629,21 @@ func (dictionary *DiskDictionary) DiscardFiles(data []string) error {
 
 func (dictionary *DiskDictionary) Clear() error {
 	// Se elimina todo del directorio de archivos
+	log.Info("DictionaryPath:" + dictionary.Path + "\n")
 	filesPath := dictionary.Path + "files"
+	log.Info("FilePath:" + filesPath + "\n")
 	err := os.RemoveAll(filesPath)
 	if err != nil {
+		log.Error("Error removing files:" + err.Error())
 		return err
 	}
 	// Se elimina todo del directorio de etiquetas
 	tagsPath := dictionary.Path + "tags"
+	log.Info("TagsPath:" + tagsPath + "\n")
 
 	err = os.RemoveAll(tagsPath)
 	if err != nil {
+		log.Error("Error removing tags:" + err.Error())
 		return err
 	}
 	return nil

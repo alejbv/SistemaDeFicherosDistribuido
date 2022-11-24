@@ -15,27 +15,45 @@ import (
 // NetDiscover trata de encontrar si existe en la red algun otro anillo chord.
 func NetDiscover(ip net.IP) (string, error) {
 	// La dirección de broadcast.
+	ip[2] = 255
 	ip[3] = 255
-	broadcast := ip.String() + ":8830"
-
-	// Tratando de escuchar al puerto en uso.
-	pc, err := net.ListenPacket("udp4", ":8830")
-	if err != nil {
-		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
-		return "", err
-	}
+	broadcast := ip.String() + ":8888"
 
 	//Resuelve la dirección a la que se va a hacer broadcast.
-	out, err := net.ResolveUDPAddr("udp4", broadcast)
+	outAddr, err := net.ResolveUDPAddr("udp", broadcast)
 	if err != nil {
 		log.Errorf("Error resolviendo la direccion de broadcast %s.", broadcast)
 		return "", err
 	}
 
-	log.Info("Resuelta direccion UPD broadcast.")
+	// Tratando de escuchar al puerto en uso.
+	conn, err := net.ListenUDP("udp", outAddr)
+	if err != nil {
+		log.Errorf("Error al escuchar a la dirección %s.", broadcast)
+		return "", err
+	}
+	defer conn.Close()
+
+	log.Infof("Resuelta direccion UPD broadcast:%s.", broadcast)
+
+	//Se crea un objeto para recibir la respuesta del otro servidor
+	listAddr, err := net.ResolveUDPAddr("udp4", "0.0.0.0:8838")
+	if err != nil {
+		log.Error("Error resolviendo la direccion para escuchar la respuesta 0.0.0.0:8838.\n")
+		return "", err
+	}
+
+	// Build listining connections
+	listen, err := net.ListenUDP("udp", listAddr)
+	if err != nil {
+		log.Errorf("Error al escuchar a la direccion de respuesta ")
+		return "", err
+	}
+	defer listen.Close()
 
 	// Enviando el mensaje
-	_, err = pc.WriteTo([]byte("Chord?"), out)
+	message := []byte("Chord?")
+	_, err = conn.WriteToUDP(message, outAddr)
 	if err != nil {
 		log.Errorf("Error enviando el mensaje de broadcast a la dirección%s.", broadcast)
 		return "", err
@@ -48,25 +66,25 @@ func NetDiscover(ip net.IP) (string, error) {
 
 	for top.After(time.Now()) {
 		// Creando el buffer para almacenar el mensaje.
-		buf := make([]byte, 1024)
+		buff := make([]byte, 15000)
 
 		// Estableciendo el tiempo de espera para mensajes entrantes.
-		err = pc.SetReadDeadline(time.Now().Add(2 * time.Second))
+		err = listen.SetReadDeadline(time.Now().Add(2 * time.Second))
 		if err != nil {
 			log.Error("Error establecientdo el tiempo de espera para mensajes entrantes.")
 			return "", err
 		}
 
 		// Esperando por un mensaje.
-		n, address, err := pc.ReadFrom(buf)
+		n, address, err := listen.ReadFromUDP(buff)
 		if err != nil {
 			log.Errorf("Error leyendo el mensaje entrante.\n%s", err.Error())
 			continue
 		}
 
-		log.Debugf("Mensaje de respuesta entrante. %s enviado a: %s", address, buf[:n])
+		log.Infof("Mensaje de respuesta entrante. %s enviado a: %s", address, buff[:n])
 
-		if string(buf[:n]) == "Yo soy chord" {
+		if string(buff[:n]) == "Yo soy chord" {
 			return strings.Split(address.String(), ":")[0], nil
 		}
 	}

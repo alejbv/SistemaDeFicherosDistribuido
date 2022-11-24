@@ -68,7 +68,7 @@ func NewNode(port string, configuration *Configuration, transport RemoteServices
 func DefaultNode(port string) (*Node, error) {
 	conf := DefaultConfig() // Crea una configuracion por defecto.
 	transport := NewGRPCServices(conf)
-	path := "server/data/"                           // Crea un objeto RPC por defecto  para interactuar con la capa de transporte.
+	path := "/usr/app/server/data/"                  // Crea un objeto RPC por defecto  para interactuar con la capa de transporte.
 	dictionary := NewDiskDictionary(conf.Hash, path) // Crea un diccionario por defecto.
 
 	// Devuelve el nodo creado.
