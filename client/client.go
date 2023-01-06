@@ -115,7 +115,7 @@ func GetOutboundIP() net.IP {
 	return localAddr.IP
 }
 
-func StartClient() (chord.ChordClient, error) {
+func StartClient() (chord.ChordClient, *grpc.ClientConn, error) {
 
 	// Obtiene la IP del cliente en la red
 	ip := GetOutboundIP()
@@ -123,22 +123,23 @@ func StartClient() (chord.ChordClient, error) {
 	addr := ip.String()
 	log.Infof("Dirección IP del cliente en la red %s.", addr)
 	addres, err := NetDiscover(ip)
+	addres += ":50050"
 
 	if err != nil {
 		log.Errorln("Hubo problemas encontrando un servidor al que conectarse")
-		return nil, fmt.Errorf("Hubo problemas encontrando un servidor al que conectarse" + err.Error())
+		return nil, nil, fmt.Errorf("Hubo problemas encontrando un servidor al que conectarse" + err.Error())
 	}
 
 	conn, err := grpc.Dial(addres, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
 	if err != nil {
 		log.Fatalf("No se pudo realizar la conexion al servidor con IP %s\n %v", addres, err)
-		return nil, err
+		return nil, nil, err
 	}
 
-	defer conn.Close()
+	//defer conn.Close()
 	client := chord.NewChordClient(conn)
 	fmt.Printf("El cliente es: %v", client)
-	return client, nil
+	return client, conn, nil
 
 }

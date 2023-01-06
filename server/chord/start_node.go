@@ -80,6 +80,9 @@ func (node *Node) Start() error {
 		return errors.New("error iniciando el servidor:  no se pudo descubrir una red para conectarse\n" + err.Error())
 	}
 
+	// Empezando el servicio en el socket abierto
+	go node.Listen()
+
 	// Si existe una red de chord existente.
 	if discovered != "" {
 		err = node.Join(&chord.Node{IP: discovered, Port: node.Port}) // Se une a la red descubierta.
@@ -91,9 +94,6 @@ func (node *Node) Start() error {
 		// En otro caso, Se crea.
 		log.Info("Creando el anillo del chord.")
 	}
-
-	// Empezando el servicio en el socket abierto
-	go node.Listen()
 
 	// Se empiezan los hilos de ejecucion periodica.
 	go node.PeriodicallyCheckPredecessor()
@@ -221,7 +221,7 @@ func (node *Node) FindIDSuccessor(id []byte) (*chord.Node, error) {
 		return nil, errors.New("error buscando el sucesor: ID no puede ser nula")
 	}
 
-	// Buscando el mas cercano, en esta finger table, con ID menor que esta ID.
+	// Buscando el más cercano, en esta fingertable, con ID menor que esta ID.
 	pred := node.ClosestFinger(id)
 
 	// Si el nodo que se esta buscando es exactamente este, se devuelve su sucesor.
@@ -257,8 +257,8 @@ func (node *Node) LocateKey(key string) (*chord.Node, error) {
 	// Obteniendo el ID relativo a esta llave
 	id, err := HashKey(key, node.config.Hash)
 	if err != nil {
-		log.Errorf("Error generando la llave: %s.\n", key)
-		return nil, fmt.Errorf(fmt.Sprintf("error generando la llave: %s.\n%s", key, err.Error()))
+		log.Errorf("Error generando el hash de la llave: %s.\n", key)
+		return nil, fmt.Errorf(fmt.Sprintf("error generando el hash de la llave: %s.\n%s", key, err.Error()))
 	}
 
 	// Busca y obtiene el sucesor de esta ID

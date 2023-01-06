@@ -21,7 +21,8 @@ var listFileCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("listFile llamado")
 
-		chordClient, _ := client.StartClient()
+		chordClient, conn, _ := client.StartClient()
+		defer conn.Close()
 
 		err := client.ClientListFiles(chordClient, args)
 		if err != nil {

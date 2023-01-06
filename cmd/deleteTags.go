@@ -21,7 +21,8 @@ var deleteTagsCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("deleteTags llamado")
 
-		chordClient, _ := client.StartClient()
+		chordClient, conn, _ := client.StartClient()
+		defer conn.Close()
 		queryTags := strings.Split(args[0], "-")
 		deleteTags := strings.Split(args[1], "-")
 		err := client.ClientDeleteTags(chordClient, queryTags, deleteTags)

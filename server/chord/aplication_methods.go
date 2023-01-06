@@ -20,7 +20,7 @@ func (node *Node) AddFile(ctx context.Context, req *chord.AddFileRequest) (*chor
 
 	// Si la request es una replica se resuelve de forma local.
 	if req.Replica {
-		log.Debug("Resolviendo la request de forma local (replicacion).")
+		log.Info("Resolviendo la request de forma local (replicacion).")
 
 		// Bloquea el diccionario para escribir en el, se desbloquea el terminar
 		node.dictLock.Lock()
@@ -55,7 +55,7 @@ func (node *Node) AddFile(ctx context.Context, req *chord.AddFileRequest) (*chor
 		entonces la request no es necesariamente local
 	*/
 	if between, err := KeyBetween(file.Name, node.config.Hash, pred.ID, node.ID); !between && err == nil {
-		log.Debug("Buscando por el nodo correspondiente.")
+		log.Info("Buscando por el nodo correspondiente.")
 		// Localiza el nodo que corresponde a esta llave
 
 		keyNode, err = node.LocateKey(file.Name)
@@ -71,7 +71,7 @@ func (node *Node) AddFile(ctx context.Context, req *chord.AddFileRequest) (*chor
 
 	// Si la llave corresponde a este nodo, directamente almacena el fichero de forma local.
 	if Equals(keyNode.ID, node.ID) {
-		log.Debug("Resolviendo la request de forma local.")
+		log.Info("Resolviendo la request de forma local.")
 
 		// Bloquea el diccionario para escribir en el, se desbloquea el terminar
 		node.dictLock.Lock()
@@ -126,7 +126,7 @@ func (node *Node) AddFile(ctx context.Context, req *chord.AddFileRequest) (*chor
 		if !Equals(suc.ID, node.ID) {
 			go func() {
 				req.Replica = true
-				log.Debugf("Replicando la request set a %s.", suc.IP)
+				log.Infof("Replicando la request set a %s.", suc.IP)
 				err := node.RPC.AddFile(suc, req)
 				if err != nil {
 					log.Errorf("Error replicando la request a %s.\n%s", suc.IP, err.Error())
@@ -140,9 +140,7 @@ func (node *Node) AddFile(ctx context.Context, req *chord.AddFileRequest) (*chor
 		// En otro caso, devuelve el resultado de la llamada remota en el nodo correspondiente.
 		return &chord.AddFileResponse{Destine: keyNode}, node.RPC.AddFile(keyNode, req)
 	}
-
 }
-
 func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileByQueryRequest) (*chord.DeleteFileByQueryResponse, error) {
 
 	// Objetos para poder llevar un registro de los ficheros, sabiendo en cuantas querys está presente
@@ -161,7 +159,7 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 	// Se bloquea el predecesor para poder leer de el, se desbloquea al terminar
 	node.predLock.RLock()
 	pred := node.predecessor
-	node.sucLock.RUnlock()
+	node.predLock.RUnlock()
 	for key, value := range querys {
 		// Esto representa la interseccion de todas las querys, o sea se procesa si las cumple todas
 		if len(value) == len(req.Tag) {
@@ -191,7 +189,7 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 				if !Equals(suc.ID, node.ID) {
 					go func() {
 						Newreq.Replica = true
-						log.Debugf("Replicando la request a %s.", suc.IP)
+						log.Infof("Replicando la request a %s.", suc.IP)
 						err := node.RPC.DeleteFile(suc, Newreq)
 						if err != nil {
 							log.Errorf("Error replicando la request a %s.\n%s", suc.IP, err.Error())
@@ -270,6 +268,7 @@ func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest
 	}
 	response := make(map[string][]byte)
 
+	log.Info("Terminado QuerySolver: Procesar info")
 	for key, value := range querys {
 		// Esto representa la interseccion de todas las querys, o sea se procesa si
 		// las cumple todas
@@ -289,19 +288,22 @@ func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest
 			if Equals(target[key].ID, node.ID) {
 
 				//Bloquea el diccionario para escribir en el, se desbloquea el final
+				log.Infof("La informacion del archivo %s es local", name)
 				node.dictLock.Lock()
 				tempValue, err := node.dictionary.GetFileInfo(name, extension)
 				node.dictLock.Unlock()
 
 				if err != nil {
+					log.Errorf("Hubo un error recuperando la informacion del archivo %s: %s", name, err.Error())
 					return &chord.ListByQueryResponse{}, err
 				}
 				response[key] = tempValue
 
 			} else {
-
+				log.Infof("La informacion del archivo %s no es local: Buscando", name)
 				resp, err := node.RPC.GetFile(target[key], req)
 				if err != nil {
+					log.Errorf("Hubo un error recuperando la informacion del archivo %s: %s", name, err.Error())
 					return &chord.ListByQueryResponse{}, err
 				}
 				response[key] = resp.Info
@@ -311,12 +313,11 @@ func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest
 	}
 	return &chord.ListByQueryResponse{Response: response}, nil
 }
-
 func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryRequest) (*chord.AddTagsByQueryResponse, error) {
 
 	// Objeto poder llevar un registro de los ficheros, sabiendo en cuantas querys está presente
 
-	querys, target, err := node.QuerySolver(req.AddTags)
+	querys, target, err := node.QuerySolver(req.QueryTags)
 
 	if err != nil {
 		log.Errorf("Error mientras se realizaban las de las etiquetas:")
@@ -331,12 +332,12 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 	// Se bloquea el predecesor para poder leer de el, se desbloquea al terminar
 	node.predLock.RLock()
 	pred := node.predecessor
-	node.sucLock.RUnlock()
+	node.predLock.RUnlock()
 
 	for key, value := range querys {
 		// Esto representa la interseccion de todas las querys, o sea se procesa si
 		// las cumple todas
-		if len(value) == len(req.AddTags) {
+		if len(value) == len(req.QueryTags) {
 			// Separa la clave en el nombre del fichero y su extension
 			idef := strings.Split(key, ".")
 			//Nombre del fichero
@@ -374,7 +375,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 				}
 
 			} else {
-				// Llama a eliminar el fichero
+				// Se llama remoto para agregar las nuevas etiquetas al fichero
 				_, err := node.RPC.AddTagsToFile(target[key], RemoteReq)
 				if err != nil {
 					return &chord.AddTagsByQueryResponse{}, err
@@ -382,7 +383,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 			}
 			for _, tag := range req.QueryTags {
 				keyNode := target[key]
-				AddRquest := &chord.AddTagRequest{
+				AddRequest := &chord.AddTagRequest{
 					Tag:          tag,
 					FileName:     name,
 					ExtensioName: extension,
@@ -405,7 +406,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 
 					//Bloquea el diccionario para escribir en el, se desbloquea el final
 					node.dictLock.Lock()
-					err := node.dictionary.DeleteFileFromTag(tag, name, extension)
+					err := node.dictionary.SetTag(tag, name, extension, target[key])
 					node.dictLock.Unlock()
 
 					if err != nil {
@@ -413,9 +414,9 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 					}
 					if !Equals(suc.ID, node.ID) {
 						go func() {
-							AddRquest.Replica = true
+							AddRequest.Replica = true
 							log.Debugf("Replicando la request a %s.", suc.IP)
-							err := node.RPC.AddTag(suc, AddRquest)
+							err := node.RPC.AddTag(suc, AddRequest)
 							if err != nil {
 								log.Errorf("Error replicando la request a %s.\n%s", suc.IP, err.Error())
 							}
@@ -425,7 +426,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 				} else {
 					// Si se tiene que hacer una request remota
 					go func() {
-						node.RPC.AddTag(target[key], AddRquest)
+						node.RPC.AddTag(target[key], AddRequest)
 					}()
 				}
 			}
@@ -433,8 +434,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 	}
 	return &chord.AddTagsByQueryResponse{}, nil
 }
-
-func (node *Node) DeleteTagFromFileByQuery(ctx context.Context, req *chord.DeleteTagsByQueryRequest) (*chord.DeleteTagsByQueryResponse, error) {
+func (node *Node) DeleteTagsByQuery(ctx context.Context, req *chord.DeleteTagsByQueryRequest) (*chord.DeleteTagsByQueryResponse, error) {
 	// Objeto poder llevar un registro de los ficheros, sabiendo en cuantas querys está presente
 
 	querys, target, err := node.QuerySolver(req.QueryTags)
@@ -451,7 +451,7 @@ func (node *Node) DeleteTagFromFileByQuery(ctx context.Context, req *chord.Delet
 
 	node.predLock.RLock()
 	pred := node.predecessor
-	node.sucLock.RUnlock()
+	node.predLock.RUnlock()
 
 	for key, value := range querys {
 		// Esto representa la interseccion de todas las querys, o sea se procesa si
@@ -556,7 +556,6 @@ func (node *Node) DeleteTagFromFileByQuery(ctx context.Context, req *chord.Delet
 	}
 	return &chord.DeleteTagsByQueryResponse{}, nil
 }
-
 func (node *Node) QuerySolver(Tags []string) (map[string][]string, map[string]*chord.Node, error) {
 	// Objeto poder llevar un registro de los ficheros, sabiendo en cuantas querys está presente
 	querys := make(map[string][]string)
@@ -575,23 +574,23 @@ func (node *Node) QuerySolver(Tags []string) (map[string][]string, map[string]*c
 		node.predLock.RUnlock()
 		// Encuentra en donde esta ubicada dicha etiqueta
 		if between, err := KeyBetween(tag, node.config.Hash, pred.ID, node.ID); !between && err == nil {
-			log.Debug("Buscando por el nodo correspondiente.")
+			log.Info("Buscando por el nodo correspondiente.")
 			// Localiza el nodo que almacena el fichero
 			keyNode, err = node.LocateKey(tag)
 			if err != nil {
-				log.Error("Error encontrando el nodo.")
-				return nil, nil, errors.New("error encontrando el nodo.\n" + err.Error())
+				log.Error("Error encontrando el nodo remoto.")
+				return nil, nil, errors.New("error encontrando el nodo remoto.\n" + err.Error())
 			}
 
 		} else if err != nil {
-			log.Error("Error encontrando el nodo.")
-			return nil, nil, errors.New("error encontrando el nodo.\n" + err.Error())
+			log.Error("Error comprobando si es el nodo correspondiente.")
+			return nil, nil, errors.New("error comprobando si es el nodo correspondiente.\n" + err.Error())
 		}
 
 		// Si pasa por aqui es q ya tiene nodo al que buscar
-		// Si el fichero corresponde a este nodo, se elimina directamente del almacenamiento.
+		// Si el fichero corresponde a este nodo, se busca directamente del almacenamiento.
 		if Equals(keyNode.ID, node.ID) {
-			log.Debug("Resolviendo la request de forma local.")
+			log.Info("Resolviendo la request de forma local.")
 
 			// Bloquea el diccionario para escribir en el y se desbloquea al terminar la funcion.
 			node.dictLock.Lock()
@@ -631,7 +630,7 @@ func (node *Node) QuerySolver(Tags []string) (map[string][]string, map[string]*c
 			res, err := node.RPC.GetTag(keyNode, getTagRequest)
 			if err != nil {
 
-				log.Error("Error al recibr los TagEncoders")
+				log.Error("Error al recibir los TagEncoders")
 				return nil, nil, errors.New("Error al recibr los TagEncoders\n" + err.Error())
 			}
 			// Se tiene la respuesta y se esta trabajando con ella
@@ -653,5 +652,6 @@ func (node *Node) QuerySolver(Tags []string) (map[string][]string, map[string]*c
 		}
 
 	}
+	log.Infof("Se obtuvo toda la informacion de las etiquetas %s", Tags)
 	return querys, target, nil
 }

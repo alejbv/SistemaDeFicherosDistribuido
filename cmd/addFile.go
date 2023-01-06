@@ -21,7 +21,8 @@ var addFileCmd = &cobra.Command{
 		fmt.Println("addFile llamado")
 
 		//Despues de comprobar que funciona se arregla esto
-		chordClient, _ := client.StartClient()
+		chordClient, conn, _ := client.StartClient()
+		defer conn.Close()
 		filePath := args[0]
 		tags := args[1:]
 		err := client.ClientAddFile(chordClient, filePath, tags)

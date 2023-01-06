@@ -38,7 +38,7 @@ func ClientAddFile(client chord.ChordClient, filePath string, tags []string) err
 		Replica: false,
 	}
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err = client.AddFile(ctx, req)
@@ -53,7 +53,7 @@ func ClientDeleteFile(client chord.ChordClient, tags []string) error {
 
 	log.Printf("Se van a eliminar todos los archivos  con etiquetas\n %s", tags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err := client.DeleteFileByQuery(ctx, &chord.DeleteFileByQueryRequest{Tag: tags})
@@ -66,9 +66,9 @@ func ClientDeleteFile(client chord.ChordClient, tags []string) error {
 }
 func ClientListFiles(client chord.ChordClient, tags []string) error {
 
-	log.Printf("Se va a obtener la informacion de los archivos con etiquetas\n %s", tags)
+	log.Infof("Se va a obtener la informacion de los archivos con etiquetas\n %s", tags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	res, err := client.ListByQuery(ctx, &chord.ListByQueryRequest{Tags: tags})
@@ -98,7 +98,7 @@ func ClientAddTags(client chord.ChordClient, queryTags, addTags []string) error 
 
 	log.Printf("Se van a agregar a todos los archivos  con etiquetas\n %s\n Las etiquetas:%s", queryTags, addTags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err := client.AddTagsByQuery(ctx, &chord.AddTagsByQueryRequest{QueryTags: queryTags,
@@ -115,7 +115,7 @@ func ClientDeleteTags(client chord.ChordClient, queryTags, deleteTags []string) 
 
 	log.Printf("Se van a eliminar de todos los archivos  con etiquetas\n %s\n Las etiquetas:%s", queryTags, deleteTags)
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
-	ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	_, err := client.DeleteTagsByQuery(ctx, &chord.DeleteTagsByQueryRequest{QueryTags: queryTags,

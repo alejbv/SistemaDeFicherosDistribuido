@@ -14,4 +14,7 @@ func main() {
 	network := "tcp"
 	services.StartServer(network, rsaPrivateKeyPath, rsaPublicteKeyPath)
 
+	for {
+
+	}
 }
