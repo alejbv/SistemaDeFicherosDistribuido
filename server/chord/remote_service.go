@@ -78,7 +78,6 @@ type RemoteServices interface {
 	// Discard descarta todos los pares <key, values> en un intervalo del almacenamiento de un nodo remoto.
 	Discard(node *chord.Node, req *chord.DiscardRequest) error
 }
-
 type GRPCServices struct {
 	*Configuration // Configuraciones de un nodo remoto.
 
@@ -268,7 +267,6 @@ func (services *GRPCServices) ListByQuery(node *chord.Node, req *chord.ListByQue
 	}
 	// Devuelve el resultado de la llamada remota.
 	return remoteNode.ListByQuery(ctx, req)
-
 }
 
 func (services *GRPCServices) DeleteTagsByQuery(node *chord.Node, req *chord.DeleteTagsByQueryRequest) (*chord.DeleteTagsByQueryResponse, error) {
@@ -282,6 +280,7 @@ func (services *GRPCServices) DeleteTagsByQuery(node *chord.Node, req *chord.Del
 	// Devuelve el resultado de la llamada remota.
 	return remoteNode.DeleteTagsByQuery(ctx, req)
 }
+
 func (services *GRPCServices) AddTagsByQuery(node *chord.Node, req *chord.AddTagsByQueryRequest) (*chord.AddTagsByQueryResponse, error) {
 	ctx, cancel, remoteNode, err := services.GeneralConnection(node)
 	defer cancel()
@@ -474,6 +473,7 @@ func (services *GRPCServices) DeleteFile(node *chord.Node, req *chord.DeleteFile
 	_, err = remoteNode.DeleteFile(ctx, req)
 	return err
 }
+
 func (services *GRPCServices) GetTag(node *chord.Node, req *chord.GetTagRequest) ([]TagEncoding, error) {
 	if node == nil {
 		return nil, errors.New(fmt.Sprintln("No se puede establecer conexion con un nodo vacio."))
@@ -521,6 +521,7 @@ func (services *GRPCServices) GetTag(node *chord.Node, req *chord.GetTagRequest)
 
 	return target, nil
 }
+
 func (services *GRPCServices) DeleteFileFromTag(node *chord.Node, req *chord.DeleteFileFromTagRequest) error {
 	if node == nil {
 		return errors.New(fmt.Sprintln("No se puede establecer una conexion con un nodo vacio."))
@@ -539,7 +540,6 @@ func (services *GRPCServices) DeleteFileFromTag(node *chord.Node, req *chord.Del
 	// Devuelve el resultado de la llamada remota.
 	_, err = remoteNode.DeleteFileFromTag(ctx, req)
 	return err
-
 }
 
 func (services *GRPCServices) EditFileFromTag(node *chord.Node, req *chord.EditFileFromTagRequest) error {
@@ -560,7 +560,6 @@ func (services *GRPCServices) EditFileFromTag(node *chord.Node, req *chord.EditF
 	// Devuelve el resultado de la llamada remota.
 	_, err = remoteNode.EditFileFromTag(ctx, req)
 	return err
-
 }
 
 func (services *GRPCServices) DeleteTag(node *chord.Node, req *chord.DeleteTagRequest) error {
@@ -581,7 +580,6 @@ func (services *GRPCServices) DeleteTag(node *chord.Node, req *chord.DeleteTagRe
 	// Devuelve el resultado de la llamada remota.
 	_, err = remoteNode.DeleteTag(ctx, req)
 	return err
-
 }
 
 // Partition devuelve todos la informacion  en un intervalo dado del almacenamiento de un nodo remoto.
@@ -644,7 +642,6 @@ func (services *GRPCServices) GeneralConnection(node *chord.Node) (context.Conte
 	// Se obtiene el contexto de la conexion y el tiempo de espera de la request.
 	ctx, cancel := context.WithTimeout(context.Background(), services.Timeout)
 	return ctx, cancel, remoteNode, nil
-
 }
 
 func (services *GRPCServices) GetFile(node *chord.Node, req *chord.GetFileInfoRequest) (*chord.GetFileInfoResponse, error) {
@@ -670,6 +667,7 @@ func (services *GRPCServices) AddTagsToFile(node *chord.Node, req *chord.AddTags
 	// Devuelve el resultado de la llamada remota.
 	return remoteNode.AddTagsToFile(ctx, req)
 }
+
 func (services *GRPCServices) DeleteTagsFromFile(node *chord.Node, req *chord.DeleteTagsFromFileRequest) (*chord.DeleteTagsFromFileResponse, error) {
 	ctx, cancel, remoteNode, err := services.GeneralConnection(node)
 	defer cancel()

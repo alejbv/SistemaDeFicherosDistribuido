@@ -28,7 +28,7 @@ func (node *Node) Stabilize() {
 
 	// Si el sucesor es este nodo, no hay nada que estabilizar.
 	if Equals(suc.ID, node.ID) {
-		log.Trace("No es necesario estabilizar")
+		log.Info("No es necesario estabilizar")
 		return
 	}
 
@@ -42,7 +42,7 @@ func (node *Node) Stabilize() {
 		sucesor de este nodo con el candidato
 	*/
 	if Equals(node.ID, suc.ID) || Between(candidate.ID, node.ID, suc.ID) {
-		log.Debug("Sucesor actualizado al nodo en " + candidate.IP + ".")
+		log.Info("Sucesor actualizado al nodo en " + candidate.IP + ".")
 		// Bloquea el sucesor para escribir en el, se desbloquea el finalizar
 		node.sucLock.Lock()
 		node.successors.PushBeg(candidate) //Se actualiza el sucesor de este nodo con el obtenido.
@@ -63,7 +63,6 @@ func (node *Node) Stabilize() {
 // PeriodicallyStabilize periodicamente estabiliza el nodo.
 func (node *Node) PeriodicallyStabilize() {
 	log.Debug("Empezado el hilo para estabilizar el nodo.")
-
 	ticker := time.NewTicker(1 * time.Second) // Establece el tiempo de activacion entre rutinas.
 	for {
 		select {

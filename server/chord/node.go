@@ -3,6 +3,7 @@ package chord
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"net"
 	"os"
@@ -165,7 +166,7 @@ func (node *Node) FindSuccessor(ctx context.Context, req *chord.FindSuccesorRequ
 
 // Notify notifica a este nodo que es posible que tenga un nuevo predecesor.
 func (node *Node) Notify(ctx context.Context, req *chord.NotifyRequest) (*chord.NotifyResponse, error) {
-	log.Trace("Comprobando la notificacion de predecesor.")
+	log.Info("Comprobando la notificacion de predecesor.")
 
 	candidate := req.Notify
 
@@ -180,7 +181,7 @@ func (node *Node) Notify(ctx context.Context, req *chord.NotifyRequest) (*chord.
 		nodo que su actual predecesor, se actualiza el predecesor con el candidato
 	*/
 	if Equals(pred.ID, node.ID) || Between(candidate.ID, pred.ID, node.ID) {
-		log.Debugf("Predecesor actualizado al nodo en %s.", candidate.IP)
+		log.Infof("Predecesor actualizado al nodo en %s.", candidate.IP)
 
 		// Bloquea el predecesor para escribir en el, lo desbloquea al terminar.
 		node.predLock.Lock()
@@ -287,23 +288,24 @@ func (node *Node) AddTag(ctx context.Context, req *chord.AddTagRequest) (*chord.
 
 	// Si la request es una replica se resuelve de forma local.
 	if req.Replica {
-		log.Info("Resolviendo la request de forma local (replicacion).")
+		log.Info("Resolviendo la request AddTag de forma local (replicacion).")
 
 		// Bloquea el diccionario para escribir en el, se desbloquea el terminar
 		node.dictLock.Lock()
 		// Almacena la etiqueta y la informacion relevante en el almacenamiento local.
 		err := node.dictionary.SetTag(req.Tag, req.FileName, req.ExtensioName, req.TargetNode)
 		node.dictLock.Unlock()
+
 		if err != nil {
-			log.Errorf("Error almacenando la replica de la etiquetas: en el nodo %v.", node)
-			return &chord.AddTagResponse{}, errors.New("error almacenado la replica de etiqueta .\n" + err.Error())
+			log.Errorf("Error almacenando la replica de la etiquetas: %s en el nodo %v.", req.Tag, node)
+			return &chord.AddTagResponse{}, errors.New(fmt.Sprintf("error almacenado la replica de etiqueta: %s. ", req.Tag) + err.Error())
 
 		} else if err == os.ErrPermission {
 			log.Error("Error almacenado la llave: ya esta bloqueada.\n" + err.Error())
 			return &chord.AddTagResponse{}, err
 		}
 
-		log.Info("Se almaceno de forma exitosa.")
+		log.Infof("Se almaceno la etiqueta %s de forma exitosa.", req.Tag)
 		return &chord.AddTagResponse{}, nil
 	}
 
@@ -323,17 +325,17 @@ func (node *Node) AddTag(ctx context.Context, req *chord.AddTagRequest) (*chord.
 		// LLocaliza el nodo que corresponde a esta llave
 		keyNode, err = node.LocateKey(req.Tag)
 		if err != nil {
-			log.Error("Error estableciendo la llave.")
-			return &chord.AddTagResponse{}, errors.New("error estableciendo la llave.\n" + err.Error())
+			log.Errorf("Error estableciendo la etiqueta: %s.", req.Tag)
+			return &chord.AddTagResponse{}, errors.New(fmt.Sprintf("error estableciendo la etiqueta: %s.", req.Tag) + err.Error())
 		}
 	} else if err != nil {
-		log.Error("Error estableciendo la llave.")
-		return &chord.AddTagResponse{}, errors.New("error estableciendo la llave.\n" + err.Error())
+		log.Errorf("Error estableciendo la etiqueta: %s.", req.Tag)
+		return &chord.AddTagResponse{}, errors.New(fmt.Sprintf("error estableciendo la etiqueta: %s.", req.Tag) + err.Error())
 	}
 
 	// Si la llave corresponde a este nodo , directamente almacena la llave de forma local.
 	if Equals(keyNode.ID, node.ID) {
-		log.Info("Resolviendo la request de forma local.")
+		log.Info("Resolviendo la request AddTag de forma local.")
 
 		// Bloquea el diccionario para escribir en el, se desbloquea el terminar
 		node.dictLock.Lock()
@@ -359,17 +361,17 @@ func (node *Node) AddTag(ctx context.Context, req *chord.AddTagRequest) (*chord.
 		if !Equals(suc.ID, node.ID) {
 			go func() {
 				req.Replica = true
-				log.Infof("Replicando la request set a %s.", suc.IP)
+				log.Infof("Replicando la request AddTag a %s.", suc.IP)
 				err := node.RPC.AddTag(suc, req)
 				if err != nil {
-					log.Errorf("Error error replicando la request a %s.\n%s", suc.IP, err.Error())
+					log.Errorf("Error error replicando la request AddTag a %s.\n%s", suc.IP, err.Error())
 				}
 			}()
 		}
 
 		return &chord.AddTagResponse{}, nil
 	} else {
-		log.Infof("Redirigiendo la request a %s.", keyNode.IP)
+		log.Infof("Redirigiendo la request AddTag a %s.", keyNode.IP)
 		// En otro caso, devuelve el resultado de la llamada remota en el nodo correspondiente.
 		return &chord.AddTagResponse{}, node.RPC.AddTag(keyNode, req)
 	}
@@ -380,7 +382,7 @@ func (node *Node) AddTagsToFile(ctx context.Context, req *chord.AddTagsToFileReq
 
 	// Si la request es una replica se resuelve de forma local.
 	if req.Replica {
-		log.Debug("Resolviendo la request de forma local (replicacion).")
+		log.Info("Resolviendo la request AddTagsToFile de forma local (replicacion).")
 
 		// Bloquea el diccionario para escribir en el, se desbloquea el terminar
 		node.dictLock.Lock()
@@ -396,7 +398,7 @@ func (node *Node) AddTagsToFile(ctx context.Context, req *chord.AddTagsToFileReq
 			return &chord.AddTagsToFileResponse{}, err
 		}
 
-		log.Info("Se almaceno de forma exitosa.")
+		log.Info("Se almacenaron las etiquetas de forma exitosa.")
 		return &chord.AddTagsToFileResponse{Destiny: node.Node}, nil
 	}
 
@@ -411,10 +413,10 @@ func (node *Node) AddTagsToFile(ctx context.Context, req *chord.AddTagsToFileReq
 		Si la ID de la llave no esta entre la ID de este nodo y su predecesor
 		entonces la request no es necesariamente local
 	*/
-	if between, err := KeyBetween(req.FileName, node.config.Hash, pred.ID, node.ID); !between && err == nil {
-		log.Debug("Buscando por el nodo correspondiente.")
+	if between, err := KeyBetween(req.FileName+"."+req.FileExtension, node.config.Hash, pred.ID, node.ID); !between && err == nil {
+		log.Info("Buscando por el nodo correspondiente.")
 		// LLocaliza el nodo que corresponde a esta llave
-		keyNode, err = node.LocateKey(req.FileName)
+		keyNode, err = node.LocateKey(req.FileName + "." + req.FileExtension)
 		if err != nil {
 			log.Error("Error estableciendo la llave.")
 			return &chord.AddTagsToFileResponse{}, errors.New("error estableciendo la llave.\n" + err.Error())
@@ -426,7 +428,7 @@ func (node *Node) AddTagsToFile(ctx context.Context, req *chord.AddTagsToFileReq
 
 	// Si la llave corresponde a este nodo , directamente almacena la llave de forma local.
 	if Equals(keyNode.ID, node.ID) {
-		log.Debug("Resolviendo la request de forma local.")
+		log.Info("Resolviendo la request AddTagsToFile de forma local.")
 
 		// Bloquea el diccionario para escribir en el, se desbloquea el terminar
 		node.dictLock.Lock()
@@ -651,22 +653,25 @@ func (node *Node) GetTag(req *chord.GetTagRequest, stream chord.Chord_GetTagServ
 }
 
 func (node *Node) DeleteFileFromTag(ctx context.Context, req *chord.DeleteFileFromTagRequest) (*chord.DeleteFileFromTagResponse, error) {
-	log.Infof("Elimina la informacion del fichero=%s en la etiqueta %s\n.", req.FileName, req.Tag)
+	log.Infof("Elimina la informacion del fichero: %s en la etiqueta %s\n.", req.FileName, req.Tag)
 	// Si la request es una replica se resuelve local
 	if req.Replica {
-		log.Debug("Resolviendo la request Delete de forma local (replicacion).")
+		log.Debug("Resolviendo la request DeleteFileFromTag de forma local (replicacion).")
 
 		// Bloquea el diccionario para escribir en el, lo desbloquea al terminar.
 		node.dictLock.Lock()
 		// Elimina el fichero de la etiqueta en el almacenamiento.
 		err := node.dictionary.DeleteFileFromTag(req.Tag, req.FileName, req.FileExtension)
 		node.dictLock.Unlock()
+
 		if err != nil && err != os.ErrPermission {
 			log.Error("Error eliminando la informacion.")
 			return &chord.DeleteFileFromTagResponse{}, errors.New("error eliminando la informacion.\n" + err.Error())
+
 		} else if err == os.ErrPermission {
 			log.Error("Error eliminando la informacion: ya esta bloqueado.\n" + err.Error())
 			return &chord.DeleteFileFromTagResponse{}, err
+
 		}
 
 		log.Info("Eliminacion exitosa.")
@@ -685,9 +690,9 @@ func (node *Node) DeleteFileFromTag(ctx context.Context, req *chord.DeleteFileFr
 		entonces la request no es necesariamente local
 	*/
 	if between, err := KeyBetween(req.Tag, node.config.Hash, pred.ID, node.ID); !between && err == nil {
-		log.Debug("Buscando por el nodo correspondiente.")
+		log.Info("Buscando por el nodo correspondiente.")
 		// Localiza el nodo que almacena el fichero
-		keyNode, err = node.LocateKey(req.FileName)
+		keyNode, err = node.LocateKey(req.Tag)
 		if err != nil {
 			log.Error("Error buscando el nodo correspondiente a la etiqueta: %s.", req.Tag)
 			return &chord.DeleteFileFromTagResponse{}, errors.New("error buscando el nodo correspondiente a la etiqueta: " + req.Tag + "\n" + err.Error())
@@ -706,10 +711,14 @@ func (node *Node) DeleteFileFromTag(ctx context.Context, req *chord.DeleteFileFr
 		// Elimina la informacion .
 		err := node.dictionary.DeleteFileFromTag(req.Tag, req.FileName, req.FileExtension)
 		node.dictLock.Unlock()
+
 		if err != nil && err != os.ErrPermission {
+
 			log.Error("Error eliminando el fichero.")
 			return &chord.DeleteFileFromTagResponse{}, errors.New("error eliminando el fichero.\n" + err.Error())
+
 		} else if err == os.ErrPermission {
+
 			log.Error("Error eliminando el fichero: ya esta bloqueado.\n" + err.Error())
 			return &chord.DeleteFileFromTagResponse{}, err
 		}
@@ -725,7 +734,7 @@ func (node *Node) DeleteFileFromTag(ctx context.Context, req *chord.DeleteFileFr
 		if !Equals(suc.ID, node.ID) {
 			go func() {
 				req.Replica = true
-				log.Debugf("Replicando la request delete para %s.", suc.IP)
+				log.Debugf("Replicando la request DeleteFileFromTag para %s.", suc.IP)
 				err := node.RPC.DeleteFileFromTag(suc, req)
 				if err != nil {
 					log.Errorf("Error replicando la request delete para %s.\n%s", suc.IP, err.Error())
@@ -735,7 +744,7 @@ func (node *Node) DeleteFileFromTag(ctx context.Context, req *chord.DeleteFileFr
 		// En otro caso se devuelve.
 		return &chord.DeleteFileFromTagResponse{}, nil
 	} else {
-		log.Infof("Redirigiendo la request delete para %s.", keyNode.IP)
+		log.Infof("Redirigiendo la request DeleteFileFromTag para %s.", keyNode.IP)
 		// En otro caso, se devuelve el resultado de la llamada remota en el nodo correspondiente
 		return &chord.DeleteFileFromTagResponse{}, node.RPC.DeleteFileFromTag(keyNode, req)
 
@@ -746,7 +755,7 @@ func (node *Node) DeleteTagsFromFile(ctx context.Context, req *chord.DeleteTagsF
 	log.Infof("Elimina del archivo %s la informacion de las etiquetas %s en el almacenamiento local\n.", req.FileName, req.ListTags)
 	// Si la request es una replica se resuelve local
 
-	log.Debug("Resolviendo la request de forma local.")
+	log.Info("Resolviendo la request de forma local.")
 	// Bloquea el diccionario para escribir en el, lo desbloquea al terminar.
 	node.dictLock.Lock()
 	// Elimina la informacion del almacenamiento.

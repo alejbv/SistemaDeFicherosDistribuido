@@ -81,10 +81,11 @@ func (dictionary *DiskDictionary) GetFile(fileName, fileExtension string) ([]byt
 	return value, tags, nil
 }
 
+// Parece no tener problemas
 func (dictionary *DiskDictionary) SetFile(file *chord.TagFile) error {
 	//dictionary.data[file.Name] = void{}
 
-	log.Debugf("Guardando el archivo: %s\n", file.Name)
+	log.Infof("Guardando el archivo: %s\n", file.Name)
 
 	// Creando el directorio
 	if isthere := FileIsThere(dictionary.Path + "files/" + file.Name + "-" + file.Extension); !isthere {
@@ -119,10 +120,10 @@ func (dictionary *DiskDictionary) SetFile(file *chord.TagFile) error {
 }
 
 func (dictionary *DiskDictionary) DeleteFile(fileName, fileExtension string) error {
-	log.Debugf("Eliminando el archivo: %s\n", fileName)
+	log.Infof("Eliminando el archivo: %s\n", fileName)
 
 	//Path del archivo a eliminar
-	filePath := dictionary.Path + "files/" + fileName + "-" + fileExtension
+	filePath := dictionary.Path + "files/" + fileName + "-" + fileExtension + "/"
 
 	if isthere := FileIsThere(filePath); !isthere {
 		return nil
@@ -139,6 +140,106 @@ func (dictionary *DiskDictionary) DeleteFile(fileName, fileExtension string) err
 		return status.Error(codes.Internal, "No se pudo eliminar el directorio")
 	}
 	return nil
+}
+
+func (dictionary *DiskDictionary) GetTag(tag string) ([]TagEncoding, error) {
+	log.Infof("Recuperando la informacion relacionada a la etiqueta: %s\n", tag)
+	// Creando el directorio
+	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
+
+		log.Errorf("No existe el directorio: %s\n", tag)
+		return nil, status.Error(codes.Internal, "No existe el directorio: "+tag)
+
+	}
+	// Path del archivo
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+	fileDir := dictionary.Path + "tags/" + tag
+	// La lista de la informacion a almacenar
+	var save []TagEncoding
+
+	// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
+	// En caso de que eso ocurriera, se guarda en save los archivos previos
+	if isThere := FileIsThere(filePath); isThere {
+		jsonInfo, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON", err)
+			return nil, status.Error(codes.Internal, "No se pudo abrir el JSON")
+		}
+		err = json.Unmarshal(jsonInfo, &save)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON: %v\n", err)
+			return nil, status.Error(codes.Internal, "No se pudo abrir el archivo")
+		}
+		if len(save) == 0 {
+			log.Errorf("El JSON esta vacio")
+			os.RemoveAll(fileDir)
+			os.Remove(fileDir)
+			return nil, status.Error(codes.Internal, "El JSON esta vacio")
+		}
+
+		// En caso de que la carpeta este vacia
+	} else {
+		log.Errorf("No existe un JSON dentro de la carpeta: %s\n ", tag)
+		return nil, status.Error(codes.Internal, "No existe un JSON dentro de la carpeta:"+tag+"\n")
+
+	}
+
+	return save, nil
+}
+
+func (dictionary *DiskDictionary) SetTag(tag, fileName, fileExtension string, node *chord.Node) error {
+
+	log.Infof("Guardando la informacion relacionada a la etiqueta: %s\n", tag)
+	// Creando el directorio
+	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
+		// Creando el archivo
+		err := os.MkdirAll(dictionary.Path+"tags/"+tag, 0666)
+		if err != nil {
+			log.Errorf("No se pudo crear el directorio %s:\n%v\n", tag, err)
+			return status.Error(codes.Internal, "No se pudo crear el directorio")
+		}
+
+	}
+	// Path del archivo
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+
+	// La lista de la informacion a almacenar
+	var save []TagEncoding
+	// Creo el objeto que voy a guardar
+	en := TagEncoding{
+		FileName:      fileName,
+		FileExtension: fileExtension,
+		NodeID:        node.ID,
+		NodeIP:        node.IP,
+		NodePort:      node.Port,
+	}
+
+	// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
+	// En caso de que eso ocurriera, se guarda en save los archivos previos
+	if isThere := FileIsThere(filePath); isThere {
+		jsonInfo, err := ioutil.ReadFile(filePath)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON", err)
+			return status.Error(codes.Internal, "No se pudo crear el archivo")
+		}
+		err = json.Unmarshal(jsonInfo, &save)
+		if err != nil {
+			log.Errorf("No se pudo abrir el JSON: %v\n", err)
+			return status.Error(codes.Internal, "No se pudo crear el archivo")
+		}
+		// En otro caso se crea el json
+	}
+	// Agregado el nuevo elemento
+	save = append(save, en)
+
+	Cjson, err := json.MarshalIndent(&save, "", "\t")
+	if err != nil {
+		log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
+		return status.Error(codes.Internal, "No se pudo modificar el archivo")
+
+	}
+
+	return ioutil.WriteFile(filePath, Cjson, 0666)
 }
 
 func (dictionary *DiskDictionary) DeleteTagsFromFile(fileName, fileExtension string, tagsRemove []string) ([]string, error) {
@@ -185,6 +286,7 @@ func (dictionary *DiskDictionary) DeleteTagsFromFile(fileName, fileExtension str
 
 				if value == tag {
 					ok = true
+					break
 				}
 				// En otro caso se almacena
 			}
@@ -193,7 +295,7 @@ func (dictionary *DiskDictionary) DeleteTagsFromFile(fileName, fileExtension str
 			}
 		}
 
-		Cjson, err := json.MarshalIndent(&temp, "", "  ")
+		Cjson, err := json.MarshalIndent(&temp, "", "/t")
 		if err != nil {
 			log.Errorf("No se pudo modificar el archivo  %s\n%v\n", fileName+"-"+fileExtension, err)
 			return temp, status.Error(codes.Internal, "No se pudo modificar el archivo")
@@ -209,7 +311,7 @@ func (dictionary *DiskDictionary) DeleteTagsFromFile(fileName, fileExtension str
 }
 
 func (dictionary *DiskDictionary) AddTagsToFile(fileName, fileExtension string, tagsAdd []string) (bool, error) {
-	log.Debugf("Agregando nuevas etiquetas al archivo: %s\n etiquetas %s", fileName, tagsAdd)
+	log.Infof("Agregando al archivo: %s nuevas etiquetas: %s\n", fileName, tagsAdd)
 	// Creando el directorio
 	if isthere := FileIsThere(dictionary.Path + "files/" + fileName + "-" + fileExtension); !isthere {
 
@@ -239,7 +341,7 @@ func (dictionary *DiskDictionary) AddTagsToFile(fileName, fileExtension string, 
 
 		save = append(save, tagsAdd...)
 
-		Cjson, err := json.MarshalIndent(&save, "", "  ")
+		Cjson, err := json.MarshalIndent(&save, "", "\t")
 		if err != nil {
 			log.Errorf("No se pudo modificar el archivo %s\n%v\n", fileName+"-"+fileExtension, err)
 			return false, status.Error(codes.Internal, "No se pudo modificar el archivo")
@@ -252,106 +354,6 @@ func (dictionary *DiskDictionary) AddTagsToFile(fileName, fileExtension string, 
 		return false, status.Error(codes.Internal, "No existe un JSON dentro de la carpeta:"+fileName+"-"+fileExtension+"\n")
 
 	}
-}
-
-func (dictionary *DiskDictionary) SetTag(tag, fileName, fileExtension string, node *chord.Node) error {
-
-	log.Debugf("Guardando la informacion relacionada a la etiqueta: %s\n", tag)
-	// Creando el directorio
-	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
-		// Creando el archivo
-		err := os.MkdirAll(dictionary.Path+"tags/"+tag, 0666)
-		if err != nil {
-			log.Errorf("No se pudo crear el directorio %s:\n%v\n", tag, err)
-			return status.Error(codes.Internal, "No se pudo crear el directorio")
-		}
-
-	}
-	// Path del archivo
-	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
-
-	// La lista de la informacion a almacenar
-	var save []TagEncoding
-	// Creo el objeto que voy a guardar
-	en := TagEncoding{
-		FileName:      fileName,
-		FileExtension: fileExtension,
-		NodeID:        node.ID,
-		NodeIP:        node.IP,
-		NodePort:      node.Port,
-	}
-
-	// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
-	// En caso de que eso ocurriera, se guarda en save los archivos previos
-	if isThere := FileIsThere(filePath); isThere {
-		jsonInfo, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			log.Errorf("No se pudo abrir el JSON", err)
-			return status.Error(codes.Internal, "No se pudo crear el archivo")
-		}
-		err = json.Unmarshal(jsonInfo, &save)
-		if err != nil {
-			log.Errorf("No se pudo abrir el JSON: %v\n", err)
-			return status.Error(codes.Internal, "No se pudo crear el archivo")
-		}
-		// En otro caso se crea el json
-	}
-	// Agregado el nuevo elemento
-	save = append(save, en)
-
-	Cjson, err := json.MarshalIndent(&save, "", "  ")
-	if err != nil {
-		log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
-		return status.Error(codes.Internal, "No se pudo modificar el archivo")
-
-	}
-
-	return ioutil.WriteFile(filePath, Cjson, 0644)
-}
-
-func (dictionary *DiskDictionary) GetTag(tag string) ([]TagEncoding, error) {
-	log.Infof("Recuperando la informacion relacionada a la etiqueta: %s\n", tag)
-	// Creando el directorio
-	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
-
-		log.Errorf("No existe el directorio: %s\n", tag)
-		return nil, status.Error(codes.Internal, "No existe el directorio: "+tag)
-
-	}
-	// Path del archivo
-	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
-	fileDir := dictionary.Path + "tags/" + tag
-	// La lista de la informacion a almacenar
-	var save []TagEncoding
-
-	// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
-	// En caso de que eso ocurriera, se guarda en save los archivos previos
-	if isThere := FileIsThere(filePath); isThere {
-		jsonInfo, err := ioutil.ReadFile(filePath)
-		if err != nil {
-			log.Errorf("No se pudo abrir el JSON", err)
-			return nil, status.Error(codes.Internal, "No se pudo abrir el JSON")
-		}
-		err = json.Unmarshal(jsonInfo, &save)
-		if err != nil {
-			log.Errorf("No se pudo abrir el JSON: %v\n", err)
-			return nil, status.Error(codes.Internal, "No se pudo abrir el archivo")
-		}
-		if len(save) == 0 {
-			log.Errorf("El JSON esta vacio")
-			os.RemoveAll(fileDir)
-			os.Remove(fileDir)
-			return nil, status.Error(codes.Internal, "El JSON esta vacio")
-		}
-
-		// En caso de que la carpeta este vacia
-	} else {
-		log.Errorf("No existe un JSON dentro de la carpeta: %s\n ", tag)
-		return nil, status.Error(codes.Internal, "No existe un JSON dentro de la carpeta:"+tag+"\n")
-
-	}
-
-	return save, nil
 }
 
 func (dictionary *DiskDictionary) DeleteFileFromTag(tag, fileName, fileExtension string) error {
@@ -402,7 +404,7 @@ func (dictionary *DiskDictionary) DeleteFileFromTag(tag, fileName, fileExtension
 			}
 		}
 
-		Cjson, err := json.MarshalIndent(&temp, "", "  ")
+		Cjson, err := json.MarshalIndent(&temp, "", "\t")
 		if err != nil {
 			log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
 			return status.Error(codes.Internal, "No se pudo modificar el archivo")
