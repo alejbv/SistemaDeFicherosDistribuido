@@ -28,7 +28,7 @@ func (node *Node) Stabilize() {
 
 	// Si el sucesor es este nodo, no hay nada que estabilizar.
 	if Equals(suc.ID, node.ID) {
-		log.Info("No es necesario estabilizar")
+		log.Debug("No es necesario estabilizar")
 		return
 	}
 

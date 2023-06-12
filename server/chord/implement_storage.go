@@ -48,13 +48,13 @@ func (dictionary *DiskDictionary) GetFile(fileName, fileExtension string) ([]byt
 	log.Debugf("Cargando archivo: %s\n", fileName)
 
 	// El path del directorio destion
-	fileDir := dictionary.Path + "files/" + fileName + "-" + fileExtension + "/"
+	fileDir := dictionary.Path + "files/" + fileName + "-" + fileExtension
 
 	// El path del fichero destion
-	filePath := fileDir + fileName + "." + fileExtension
+	filePath := fileDir + "/" + fileName + "." + fileExtension
 
 	// El path del json de las etiquetass
-	fileJson := fileDir + "tags.json"
+	fileJson := fileDir + "/tags.json"
 
 	// La informacion del archivo
 	value, err := ioutil.ReadFile(filePath)
@@ -96,9 +96,9 @@ func (dictionary *DiskDictionary) SetFile(file *chord.TagFile) error {
 		}
 	}
 	// Path para crear el archivo
-	fileDir := dictionary.Path + "files/" + file.Name + "-" + file.Extension + "/"
-	filePath := fileDir + file.Name + "." + file.Extension
-	fileJson := fileDir + "tags.json"
+	fileDir := dictionary.Path + "files/" + file.Name + "-" + file.Extension
+	filePath := fileDir + "/" + file.Name + "." + file.Extension
+	fileJson := fileDir + "/tags.json"
 
 	// Guarda la informacion en el fichero filepath, si no existe lo crea
 	err := ioutil.WriteFile(filePath, file.File, 0666)
@@ -123,27 +123,22 @@ func (dictionary *DiskDictionary) DeleteFile(fileName, fileExtension string) err
 	log.Infof("Eliminando el archivo: %s\n", fileName)
 
 	//Path del archivo a eliminar
-	filePath := dictionary.Path + "files/" + fileName + "-" + fileExtension + "/"
+	filePath := dictionary.Path + "files/" + fileName + "-" + fileExtension
 
 	if isthere := FileIsThere(filePath); !isthere {
 		return nil
 	}
 	err := os.RemoveAll(filePath)
 	if err != nil {
-		log.Errorf("Error vaciando el directorio:\n%v\n", err)
+		log.Errorf("Error borrando el directorio:\n%v\n", err)
 		return status.Error(codes.Internal, "Error vaciando el directorio")
 	}
-	err = os.Remove(filePath)
-
-	if err != nil {
-		log.Errorf("Error eliminando el directorio:\n%v\n", err)
-		return status.Error(codes.Internal, "No se pudo eliminar el directorio")
-	}
+	log.Info("No hubo problemas eliminando el archivo")
 	return nil
 }
 
 func (dictionary *DiskDictionary) GetTag(tag string) ([]TagEncoding, error) {
-	log.Infof("Recuperando la informacion relacionada a la etiqueta: %s\n", tag)
+	log.Debugf("Recuperando la informacion relacionada a la etiqueta: %s\n", tag)
 	// Creando el directorio
 	if isthere := FileIsThere(dictionary.Path + "tags/" + tag); !isthere {
 
@@ -152,7 +147,7 @@ func (dictionary *DiskDictionary) GetTag(tag string) ([]TagEncoding, error) {
 
 	}
 	// Path del archivo
-	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + ".json"
 	fileDir := dictionary.Path + "tags/" + tag
 	// La lista de la informacion a almacenar
 	var save []TagEncoding
@@ -173,7 +168,6 @@ func (dictionary *DiskDictionary) GetTag(tag string) ([]TagEncoding, error) {
 		if len(save) == 0 {
 			log.Errorf("El JSON esta vacio")
 			os.RemoveAll(fileDir)
-			os.Remove(fileDir)
 			return nil, status.Error(codes.Internal, "El JSON esta vacio")
 		}
 
@@ -201,7 +195,7 @@ func (dictionary *DiskDictionary) SetTag(tag, fileName, fileExtension string, no
 
 	}
 	// Path del archivo
-	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + ".json"
 
 	// La lista de la informacion a almacenar
 	var save []TagEncoding
@@ -274,8 +268,8 @@ func (dictionary *DiskDictionary) DeleteTagsFromFile(fileName, fileExtension str
 
 		if len(save) == 0 {
 			log.Errorf("El JSON esta vacio")
+			log.Infof("Eliminando la carpeta %s", fileDir)
 			os.RemoveAll(fileDir)
-			os.Remove(fileDir)
 			return nil, status.Error(codes.Internal, "El JSON esta vacio")
 		}
 		//var temp []TagEncoding
@@ -295,13 +289,15 @@ func (dictionary *DiskDictionary) DeleteTagsFromFile(fileName, fileExtension str
 			}
 		}
 
-		Cjson, err := json.MarshalIndent(&temp, "", "/t")
+		Cjson, err := json.MarshalIndent(&temp, "", "\t")
 		if err != nil {
 			log.Errorf("No se pudo modificar el archivo  %s\n%v\n", fileName+"-"+fileExtension, err)
 			return temp, status.Error(codes.Internal, "No se pudo modificar el archivo")
 		}
+		log.Infof("El archivo a guardar %s \n luego de eliminar las etiquetas %s", Cjson, tagsRemove)
 
-		return temp, ioutil.WriteFile(filePath, Cjson, 0666)
+		err = ioutil.WriteFile(filePath, Cjson, 0666)
+		return temp, err
 		// En caso de que la carpeta este vacia
 	} else {
 		log.Errorf("No existe un JSON dentro de la carpeta: %s\n ", fileName+"-"+fileExtension)
@@ -367,7 +363,7 @@ func (dictionary *DiskDictionary) DeleteFileFromTag(tag, fileName, fileExtension
 		return nil
 	}
 	// Path del archivo
-	filePath := dictionary.Path + "tags/" + tag + "/" + tag + "." + "json"
+	filePath := dictionary.Path + "tags/" + tag + "/" + tag + ".json"
 	fileDir := dictionary.Path + "tags/" + tag
 	// La lista de la informacion a almacenar
 	var save []TagEncoding
@@ -389,8 +385,8 @@ func (dictionary *DiskDictionary) DeleteFileFromTag(tag, fileName, fileExtension
 
 		if len(save) == 0 {
 			log.Errorf("El JSON esta vacio")
+			log.Infof("Eliminando la carpeta %s", fileDir)
 			os.RemoveAll(fileDir)
-			os.Remove(fileDir)
 			return status.Error(codes.Internal, "El JSON esta vacio")
 		}
 		//var temp []TagEncoding
@@ -409,7 +405,7 @@ func (dictionary *DiskDictionary) DeleteFileFromTag(tag, fileName, fileExtension
 			log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
 			return status.Error(codes.Internal, "No se pudo modificar el archivo")
 		}
-
+		log.Infof("El archivo a guardar %s \n luego de eliminar los archivos %s", Cjson, fileName+"."+fileExtension)
 		return ioutil.WriteFile(filePath, Cjson, 0666)
 		// En caso de que la carpeta este vacia
 	} else {
@@ -436,12 +432,6 @@ func (dictionary *DiskDictionary) DeleteTag(tag string) error {
 		log.Errorf("Error al vaciar el directorio %s\n", tag)
 		return err
 	}
-	err = os.Remove(fileDir)
-	if err != nil {
-		log.Errorf("Error eliminando el directorio %s\n", tag)
-		return err
-	}
-
 	return nil
 }
 
@@ -578,7 +568,7 @@ func (dictionary *DiskDictionary) ExtendTags(data map[string][]byte) error {
 
 		}
 		// Path del archivo
-		filePath := dictionary.Path + "tags/" + key + "/" + key + "." + "json"
+		filePath := dictionary.Path + "tags/" + key + "/" + key + ".json"
 		// Comprueba si hay creado un json, o sea si se almaceno informacion anteriormente
 		// En caso de que eso ocurriera, se guarda en save los archivos previos
 		return ioutil.WriteFile(filePath, value, 0666)
@@ -686,7 +676,6 @@ func (dictionary *DiskDictionary) EditFileFromTag(tag string, mod *chord.TagEnco
 		if len(save) == 0 {
 			log.Errorf("El JSON esta vacio")
 			os.RemoveAll(fileDir)
-			os.Remove(fileDir)
 			return nil
 		}
 		//var temp []TagEncoding
@@ -701,7 +690,7 @@ func (dictionary *DiskDictionary) EditFileFromTag(tag string, mod *chord.TagEnco
 			temp = append(temp, value)
 		}
 
-		Cjson, err := json.MarshalIndent(&save, "", "  ")
+		Cjson, err := json.MarshalIndent(&temp, "", "\t")
 		if err != nil {
 			log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
 			return status.Error(codes.Internal, "No se pudo modificar el archivo")
@@ -717,13 +706,13 @@ func (dictionary *DiskDictionary) EditFileFromTag(tag string, mod *chord.TagEnco
 }
 
 func (dictionary *DiskDictionary) GetFileInfo(fileName, fileExtension string) ([]byte, error) {
-	log.Debugf("Cargando informacion del archivo: %s\n", fileName)
+	log.Infof("Cargando informacion del archivo: %s\n", fileName)
 
-	// El path del directorio destion
-	fileDir := dictionary.Path + "files/" + fileName + "-" + fileExtension + "/"
+	// El path del directorio destino
+	fileDir := dictionary.Path + "files/" + fileName + "-" + fileExtension
 
 	// El path del json de las etiquetass
-	fileJson := fileDir + "tags.json"
+	fileJson := strings.Join([]string{fileDir, "tags.json"}, "/")
 
 	// La informacion del json
 	tagsJson, err := ioutil.ReadFile(fileJson)
@@ -779,7 +768,7 @@ func (dictionary *DiskDictionary) AddFileToTag(tag string, filesToAdd []*chord.T
 
 	}
 
-	Cjson, err := json.MarshalIndent(&save, "", "  ")
+	Cjson, err := json.MarshalIndent(&save, "", "\t")
 	if err != nil {
 		log.Errorf("No se pudo modificar el archivo correspondiente a la etiqueta %s\n%v\n", tag, err)
 		return status.Error(codes.Internal, "No se pudo modificar el archivo")

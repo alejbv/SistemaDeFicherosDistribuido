@@ -2,6 +2,7 @@ package chord
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"os"
@@ -154,7 +155,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 		log.Errorf("Error mientras se realizaban las Querys de las etiquetas:")
 		return &chord.AddTagsByQueryResponse{}, err
 	}
-
+	log.Info("Terminado QuerySolver: Procesar info")
 	// Se bloquea el sucesor para poder leer de el, se desbloquea al terminar
 	node.sucLock.RLock()
 	suc := node.successors.Beg()
@@ -212,7 +213,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 					return &chord.AddTagsByQueryResponse{}, err
 				}
 			}
-			for _, tag := range req.QueryTags {
+			for _, tag := range req.AddTags {
 
 				// Se toma el nodo actual por defecto
 				keyNode := node.Node
@@ -276,7 +277,7 @@ func (node *Node) AddTagsByQuery(ctx context.Context, req *chord.AddTagsByQueryR
 
 // Brinda informacion de los ficheros almacenados en el sistema que poseen las etiquetas en la Query
 func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest) (*chord.ListByQueryResponse, error) {
-
+	log.Info("Resolviendo la request ListByQuery")
 	// Objeto poder llevar un registro de los ficheros, sabiendo en cuantas querys está presente
 	querys, target, err := node.QuerySolver(req.Tags)
 
@@ -318,12 +319,14 @@ func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest
 				response[key] = tempValue
 
 			} else {
-				log.Infof("La informacion del archivo %s no es local: Buscando", name)
+				log.Infof("La informacion del archivo %s no es local: Buscando en : %s", name, target[key].IP)
 				resp, err := node.RPC.GetFile(target[key], req)
 				if err != nil {
 					log.Errorf("Hubo un error recuperando la informacion del archivo %s: %s", name, err.Error())
 					return &chord.ListByQueryResponse{}, err
 				}
+				log.Infof("Se recupero la informacion del archivo: %s ", name)
+				log.Infof("Se recupero del archivo: %s la informacion: %s", key, string(resp.Info))
 				response[key] = resp.Info
 			}
 
@@ -334,7 +337,6 @@ func (node *Node) ListByQuery(ctx context.Context, req *chord.ListByQueryRequest
 
 // Elimina del sistema la informacion relacionada a todos los ficheros que cumplen con las etiquetas de una Query
 func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileByQueryRequest) (*chord.DeleteFileByQueryResponse, error) {
-
 	log.Info("Empezando a dar solucion a la request DeleteFile")
 	// Objetos para poder llevar un registro de los ficheros, sabiendo en cuantas querys está presente
 	querys, target, err := node.QuerySolver(req.Tag)
@@ -343,7 +345,7 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 		log.Errorf("Error mientras se realizaban las de las etiquetas:")
 		return &chord.DeleteFileByQueryResponse{}, err
 	}
-
+	log.Info("Terminado QuerySolver: Procesar info")
 	// Se bloquea el sucesor para poder leer de el, se desbloquea al terminar
 	node.sucLock.RLock()
 	suc := node.successors.Beg()
@@ -353,6 +355,11 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 	node.predLock.RLock()
 	pred := node.predecessor
 	node.predLock.RUnlock()
+
+	// Variable para almacenar las etiquetas de los archivos a eliminar
+	var tempValue []byte
+	var Tags []string
+
 	for key, value := range querys {
 		// Esto representa la interseccion de todas las querys, o sea se procesa si las cumple todas
 		if len(value) == len(req.Tag) {
@@ -363,6 +370,10 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 			// Nombre de la extension
 			extension := idef[1]
 
+			req := &chord.GetFileInfoRequest{
+				FileName:      name,
+				FileExtension: extension,
+			}
 			Newreq := &chord.DeleteFileRequest{
 				FileName:      name,
 				FileExtension: extension,
@@ -373,6 +384,10 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 
 				//Bloquea el diccionario para escribir en el, se desbloquea el final
 				node.dictLock.Lock()
+				// Si el archivo es local recupero primero todas sus etiquetas
+				tempValue, _ = node.dictionary.GetFileInfo(name, extension)
+
+				// Despues de recuperadas sus etiquetas lo elimino
 				err := node.dictionary.DeleteFile(name, extension)
 				node.dictLock.Unlock()
 
@@ -392,13 +407,20 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 
 			} else {
 				// Se elimina el fichero remotamente
-				err := node.RPC.DeleteFile(target[key], Newreq)
-				if err != nil {
+				log.Infof("El archivo no esta local, redirigiendo la request DeleteFile a %s.", suc.IP)
+				resp, err1 := node.RPC.GetFile(target[key], req)
+
+				tempValue = resp.Info
+
+				err2 := node.RPC.DeleteFile(target[key], Newreq)
+				if err1 != nil || err2 != nil {
 					return &chord.DeleteFileByQueryResponse{}, err
 				}
 
 			}
-			for _, tag := range value {
+			json.Unmarshal(tempValue, &Tags)
+			log.Infof("Se va a eliminar la informacion del archivo %s de las etiquetas %s", name+"-"+extension, Tags)
+			for _, tag := range Tags {
 
 				//nodo por defecto
 				keyNode := node.Node
@@ -437,7 +459,7 @@ func (node *Node) DeleteFileByQuery(ctx context.Context, req *chord.DeleteFileBy
 					if !Equals(suc.ID, node.ID) {
 						go func() {
 							DeleteReq.Replica = true
-							log.Debugf("Replicando la request a %s.", suc.IP)
+							log.Infof("Replicando la request a %s.", suc.IP)
 							err := node.RPC.DeleteFileFromTag(suc, DeleteReq)
 							if err != nil {
 								log.Errorf("Error replicando la request a %s.\n%s", suc.IP, err.Error())
@@ -468,7 +490,7 @@ func (node *Node) DeleteTagsByQuery(ctx context.Context, req *chord.DeleteTagsBy
 		log.Errorf("Error mientras se realizaban las de las etiquetas:")
 		return &chord.DeleteTagsByQueryResponse{}, err
 	}
-
+	log.Info("Terminado QuerySolver: Procesar info")
 	// Se bloquea el sucesor para poder leer de el, se desbloquea al terminar
 
 	node.sucLock.RLock()
@@ -528,7 +550,7 @@ func (node *Node) DeleteTagsByQuery(ctx context.Context, req *chord.DeleteTagsBy
 				}
 			}
 
-			for _, tag := range req.QueryTags {
+			for _, tag := range req.RemoveTags {
 
 				//nodo por defecto
 				keyNode := node.Node
@@ -687,5 +709,9 @@ func (node *Node) QuerySolver(Tags []string) (map[string][]string, map[string]*c
 
 	}
 	log.Infof("Se obtuvo toda la informacion de las etiquetas %s", Tags)
+	for key, value := range querys {
+		log.Infof("Nombre: %s\n Etiquetas: %v\n Ubicacion: %s\n", key, value, string(target[key].IP))
+
+	}
 	return querys, target, nil
 }

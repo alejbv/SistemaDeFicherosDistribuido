@@ -78,18 +78,18 @@ func ClientListFiles(client chord.ChordClient, tags []string) error {
 
 	}
 	info := res.Response
+
 	for key, value := range info {
 		var fileTags []string
 
 		json.Unmarshal(value, &fileTags)
-		log.Printf("Archivos \t\t Etiquetas")
-		log.Printf("%s\t", key)
-		space := "\t"
+		log.Println("Archivos \t\t Etiquetas")
+		log.Printf("%s", key)
+		space := "\t\t   "
 		for _, tag := range fileTags {
-			log.Printf(space+"%s\n", tag)
-			space = "\t\t"
+			log.Println(space + tag)
 		}
-
+		log.Println()
 	}
 	return nil
 
