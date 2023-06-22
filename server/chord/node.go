@@ -715,7 +715,7 @@ func (node *Node) DeleteFileFromTag(ctx context.Context, req *chord.DeleteFileFr
 		// Localiza el nodo que almacena el fichero
 		keyNode, err = node.LocateKey(req.Tag)
 		if err != nil {
-			log.Error("Error buscando el nodo correspondiente a la etiqueta: %s.", req.Tag)
+			log.Errorf("Error buscando el nodo correspondiente a la etiqueta: %s.", req.Tag)
 			return &chord.DeleteFileFromTagResponse{}, errors.New("error buscando el nodo correspondiente a la etiqueta: " + req.Tag + "\n" + err.Error())
 		}
 
